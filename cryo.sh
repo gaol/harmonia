@@ -99,6 +99,8 @@ ls -lah /var/jenkins_home/
 
 ls -lah /var/jenkins_home/.ssh/
 
+ls -l
+
 # do not zip workspace.zip when running eap-job.sh
 #unset ZIP_WORKSPACE
 
