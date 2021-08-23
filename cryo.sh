@@ -95,6 +95,8 @@ echo "CRYO_COMMAND_OPTS: ${CRYO_COMMAND_OPTS}"
 CRYO_JAR="$(ls "${PARENT_JOB_DIR}"/target/cryo-*[^sources].jar)"
 echo "CRYO_JAR: ${CRYO_JAR}"
 
+ls -lah /var/jenkins_home/
+
 # do not zip workspace.zip when running eap-job.sh
 #unset ZIP_WORKSPACE
 
