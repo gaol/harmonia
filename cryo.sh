@@ -74,6 +74,8 @@ export ENV_HARMONIA_BUILD_SH=${HARMONIA_HOME}/eap-job.sh
 # disable interactive mode in pr-merge
 export NO_STOP_BEFORE_MERGE="true"
 
+set -x
+
 AUXILIA_HOME="$(cd "${WORKSPACE}/../auxilia" && pwd)"
 export PATH=${AUXILIA_HOME}:${PATH}
 
