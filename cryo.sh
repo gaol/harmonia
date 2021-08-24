@@ -103,6 +103,7 @@ ls -lah /var/jenkins_home/.ssh/
 
 ls -l
 
+echo -e "end of execution!!"
 # do not zip workspace.zip when running eap-job.sh
 #unset ZIP_WORKSPACE
 
