@@ -200,9 +200,9 @@ if [ "${BUILD_COMMAND}" = 'build' ]; then
   fi
 
   # shellcheck disable=SC2086,SC2068
-  echo mvn clean install -Dts.skipTests=true ${MAVEN_VERBOSE}  "${FAIL_AT_THE_END}" ${MAVEN_SETTINGS_XML_OPTION} -B ${BUILD_OPTS} ${@}
+  echo mvn clean install -DskipTests -Dts.skipTests=true ${MAVEN_VERBOSE}  "${FAIL_AT_THE_END}" ${MAVEN_SETTINGS_XML_OPTION} -B ${BUILD_OPTS} ${@}
   # shellcheck disable=SC2086,SC2068
-  mvn clean install -Dts.skipTests=true ${MAVEN_VERBOSE}  "${FAIL_AT_THE_END}" ${MAVEN_SETTINGS_XML_OPTION} -B ${BUILD_OPTS} ${@}
+  mvn clean install -DskipTests -Dts.skipTests=true ${MAVEN_VERBOSE}  "${FAIL_AT_THE_END}" ${MAVEN_SETTINGS_XML_OPTION} -B ${BUILD_OPTS} ${@}
   status=${?}
   if [ "${status}" -ne 0 ]; then
     echo "Compilation failed"
@@ -210,7 +210,7 @@ if [ "${BUILD_COMMAND}" = 'build' ]; then
   fi
 
   if [ "${GENERATE_JARS_LIST}" == "true" ]; then
-    find dist/target/ -name "*.jar" | rev | cut -d "/" -f1 | rev > "${WORKSPACE}/jars_list.txt"
+    find ee-dist/target/ -name "*.jar" | rev | cut -d "/" -f1 | rev > "${WORKSPACE}/jars_list.txt"
   fi
 
   if [ "${ZIP_WORKSPACE}" == "true" ]; then
