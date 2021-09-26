@@ -127,6 +127,7 @@ readonly OLD_RELEASES_FOLDER=${OLD_RELEASES_FOLDER:-/opt/old-as-releases}
 
 readonly FOLDER_DOES_NOT_EXIST_ERROR_CODE='3'
 readonly ZIP_WORKSPACE=${ZIP_WORKSPACE:-'false'}
+readonly GENERATE_JARS_LIST=${GENERATE_JARS_LIST:-'true'}
 
 if [ -n "${EXECUTOR_NUMBER}" ]; then
   echo -n "Job run by executor ID ${EXECUTOR_NUMBER} "
@@ -206,6 +207,10 @@ if [ "${BUILD_COMMAND}" = 'build' ]; then
   if [ "${status}" -ne 0 ]; then
     echo "Compilation failed"
     exit "${GIT_SKIP_BISECT_ERROR_CODE}"
+  fi
+
+  if [ "${GENERATE_JARS_LIST}" == "true" ]; then
+    find dist/target/ -name "*.jar" | rev | cut -d "/" -f1 | rev > "${WORKSPACE}/jars_list.txt"
   fi
 
   if [ "${ZIP_WORKSPACE}" == "true" ]; then
