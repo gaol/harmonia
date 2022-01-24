@@ -137,6 +137,7 @@ testsuite() {
   cd ..
 
   # shellcheck disable=SC2086,SC2068
+  find ${EAP_SOURCES_DIR}/testsuite/ -name host-master-jvm-properties.xml|grep -v "target" |xargs sed -i "s/64m/32m/g"
   bash -x ./integration-tests.sh "${TEST_TO_RUN}" ${MAVEN_VERBOSE} "${FAIL_AT_THE_END}" ${TESTSUITE_OPTS} ${@}
   exit "${?}"
 }
