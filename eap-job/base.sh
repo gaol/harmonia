@@ -127,7 +127,7 @@ testsuite() {
   export TESTSUITE_OPTS="${TESTSUITE_OPTS} -Djboss.test.mixed.domain.dir=${OLD_RELEASES_FOLDER}"
   export TESTSUITE_OPTS="${TESTSUITE_OPTS} -Dmaven.test.failure.ignore=${MAVEN_IGNORE_TEST_FAILURE}"
   export TESTSUITE_OPTS="${TESTSUITE_OPTS} -Dsurefire.rerunFailingTestsCount=${RERUN_FAILING_TESTS}"
-  export TESTSUITE_OPTS="${TESTSUITE_OPTS} -Dsurefire.memory.args=-Xmx1024m"
+  export TESTSUITE_OPTS="${TESTSUITE_OPTS} -Dsurefire.memory.args=-Xmx2048m"
 
   export TESTSUITE_OPTS="${TESTSUITE_OPTS} ${MAVEN_SETTINGS_XML_OPTION}"
 
@@ -137,8 +137,8 @@ testsuite() {
   cd ..
 
   # shellcheck disable=SC2086,SC2068
-  find ${EAP_SOURCES_DIR}/testsuite/ -name host-master-jvm-properties.xml|grep -v "target" |xargs sed -i "s/128m/256m/g"
-  find ${EAP_SOURCES_DIR}/testsuite/ -name host-master-jvm-properties.xml|grep -v "target" |xargs sed -i "s/64m/128m/g"
+  #find ${EAP_SOURCES_DIR}/testsuite/ -name host-master-jvm-properties.xml|grep -v "target" |xargs sed -i "s/128m/256m/g"
+  #find ${EAP_SOURCES_DIR}/testsuite/ -name host-master-jvm-properties.xml|grep -v "target" |xargs sed -i "s/64m/128m/g"
   bash -x ./integration-tests.sh "${TEST_TO_RUN}" ${MAVEN_VERBOSE} "${FAIL_AT_THE_END}" ${TESTSUITE_OPTS} ${@}
   exit "${?}"
 }
