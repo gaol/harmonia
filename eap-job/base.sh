@@ -84,6 +84,8 @@ configure_mvn_opts() {
   # workaround wagon issue - https://projects.engineering.redhat.com/browse/SET-20
   export MAVEN_OPTS="${MAVEN_OPTS} -Dmaven.wagon.http.pool=${MAVEN_WAGON_HTTP_POOL}"
   export MAVEN_OPTS="${MAVEN_OPTS} -Dmaven.wagon.httpconnectionManager.maxPerRoute=${MAVEN_WAGON_HTTP_MAX_PER_ROUTE}"
+  export MAVEN_OPTS="${MAVEN_OPTS} -XX:-UseContainerSupport"
+  export MVN_OPTS="${MAVEN_OPTS}"
 }
 
 configure_mvn_settings() {
@@ -126,12 +128,13 @@ testsuite() {
   export TESTSUITE_OPTS="${TESTSUITE_OPTS} -Dmaven.test.failure.ignore=${MAVEN_IGNORE_TEST_FAILURE}"
   export TESTSUITE_OPTS="${TESTSUITE_OPTS} -Dsurefire.rerunFailingTestsCount=${RERUN_FAILING_TESTS}"
   export TESTSUITE_OPTS="${TESTSUITE_OPTS} -Dsurefire.memory.args=-Xmx1024m"
+  export TESTSUITE_OPTS="${TESTSUITE_OPTS} -Delytron"
 
   export TESTSUITE_OPTS="${TESTSUITE_OPTS} ${MAVEN_SETTINGS_XML_OPTION}"
 
   export TEST_TO_RUN=${TEST_TO_RUN:-'-DallTests'}
   cd "${EAP_SOURCES_DIR}/testsuite" || exit "${FOLDER_DOES_NOT_EXIST_ERROR_CODE}"
-  mvn clean
+  #mvn clean
   cd ..
 
   # shellcheck disable=SC2086,SC2068
