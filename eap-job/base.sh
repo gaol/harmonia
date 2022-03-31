@@ -84,8 +84,8 @@ configure_mvn_opts() {
   # workaround wagon issue - https://projects.engineering.redhat.com/browse/SET-20
   export MAVEN_OPTS="${MAVEN_OPTS} -Dmaven.wagon.http.pool=${MAVEN_WAGON_HTTP_POOL}"
   export MAVEN_OPTS="${MAVEN_OPTS} -Dmaven.wagon.httpconnectionManager.maxPerRoute=${MAVEN_WAGON_HTTP_MAX_PER_ROUTE}"
-  export MAVEN_OPTS="${MAVEN_OPTS} -XX:-UseContainerSupport"
-  export MVN_OPTS="${MAVEN_OPTS}"
+  #export MAVEN_OPTS="${MAVEN_OPTS} -XX:-UseContainerSupport"
+  #export MVN_OPTS="${MAVEN_OPTS}"
 }
 
 configure_mvn_settings() {
