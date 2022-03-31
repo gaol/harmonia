@@ -128,12 +128,15 @@ testsuite() {
   export TESTSUITE_OPTS="${TESTSUITE_OPTS} -Dmaven.test.failure.ignore=${MAVEN_IGNORE_TEST_FAILURE}"
   export TESTSUITE_OPTS="${TESTSUITE_OPTS} -Dsurefire.rerunFailingTestsCount=${RERUN_FAILING_TESTS}"
   export TESTSUITE_OPTS="${TESTSUITE_OPTS} -Dsurefire.memory.args=-Xmx1024m"
+  export TESTSUITE_OPTS="${TESTSUITE_OPTS} -Delytron"
 
   export TESTSUITE_OPTS="${TESTSUITE_OPTS} ${MAVEN_SETTINGS_XML_OPTION}"
 
   export TEST_TO_RUN=${TEST_TO_RUN:-'-DallTests'}
   cd "${EAP_SOURCES_DIR}/testsuite" || exit "${FOLDER_DOES_NOT_EXIST_ERROR_CODE}"
-  mvn clean
+
+  echo "Comment out mvn clean, because we have compiler failures in integration/web and integration/basic "
+  # mvn clean
   cd ..
 
   # shellcheck disable=SC2086,SC2068
