@@ -212,7 +212,7 @@ setup() {
 
   readonly MEMORY_SETTINGS=${MEMORY_SETTINGS:-'-Xmx2048m -Xms1024m'}
 
-  readonly BUILD_OPTS=${BUILD_OPTS:-'-Drelease'}
+  readonly BUILD_OPTS=${BUILD_OPTS:-'-Drelease -Delytron'}
 
   readonly MAVEN_WAGON_HTTP_POOL=${WAGON_HTTP_POOL:-'false'}
   readonly MAVEN_WAGON_HTTP_MAX_PER_ROUTE=${MAVEN_WAGON_HTTP_MAX_PER_ROUTE:-'3'}
