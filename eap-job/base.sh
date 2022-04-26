@@ -134,6 +134,7 @@ testsuite() {
   #mvn clean
   cd ..
 
+  echo "TESTSUITE_OPTS: ${TESTSUITE_OPTS}"
   # shellcheck disable=SC2086,SC2068
   bash -x ./integration-tests.sh "${TEST_TO_RUN}" ${MAVEN_VERBOSE} "${FAIL_AT_THE_END}" ${TESTSUITE_OPTS} ${@}
   exit "${?}"
