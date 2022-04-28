@@ -133,7 +133,9 @@ testsuite() {
 
   export TEST_TO_RUN=${TEST_TO_RUN:-'-DallTests'}
   cd "${EAP_SOURCES_DIR}/testsuite" || exit "${FOLDER_DOES_NOT_EXIST_ERROR_CODE}"
-  mvn clean
+  if [ -n "$(echo ${TESTSUITE_OPTS} | grep noCompile)" ]; then
+    mvn clean
+  fi
   cd ..
 
   # shellcheck disable=SC2086,SC2068
