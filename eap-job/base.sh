@@ -136,7 +136,7 @@ testsuite() {
 
   echo "TESTSUITE_OPTS: ${TESTSUITE_OPTS}"
   # shellcheck disable=SC2086,SC2068
-  bash -x ./integration-tests.sh "${TEST_TO_RUN}" ${MAVEN_VERBOSE} "${FAIL_AT_THE_END}" ${TESTSUITE_OPTS} ${@}
+  #bash -x ./integration-tests.sh "${TEST_TO_RUN}" ${MAVEN_VERBOSE} "${FAIL_AT_THE_END}" ${TESTSUITE_OPTS} ${@}
   echo -e "Sleep for ${SLEEP_TIME}"
   sleep ${SLEEP_TIME}
   exit "${?}"
