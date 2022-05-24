@@ -135,8 +135,10 @@ testsuite() {
   cd ..
 
   echo "TESTSUITE_OPTS: ${TESTSUITE_OPTS}"
-  # shellcheck disable=SC2086,SC2068
-  bash -x ./integration-tests.sh "${TEST_TO_RUN}" ${MAVEN_VERBOSE} "${FAIL_AT_THE_END}" ${TESTSUITE_OPTS} ${@}
+  if [ "${RUN_JAVA_TEST}" = "true" ]; then
+    # shellcheck disable=SC2086,SC2068
+    bash -x ./integration-tests.sh "${TEST_TO_RUN}" ${MAVEN_VERBOSE} "${FAIL_AT_THE_END}" ${TESTSUITE_OPTS} ${@}
+  fi
   echo -e "Sleep for ${SLEEP_TIME}"
   sleep ${SLEEP_TIME}
   exit "${?}"
@@ -208,6 +210,7 @@ setup() {
   fi
 
   readonly SLEEP_TIME=${SLEEP_TIME:-'60m'}
+  readonly RUN_JAVA_TEST=${RUN_JAVA_TEST:-'true'}
   readonly MAVEN_VERBOSE=${MAVEN_VERBOSE}
   readonly GIT_SKIP_BISECT_ERROR_CODE=${GIT_SKIP_BISECT_ERROR_CODE:-'125'}
 
