@@ -46,7 +46,7 @@ pre_test() {
   # shellcheck disable=SC2154
   if [ "${ip}" == "ipv6" ];
   then
-    export TESTSUITE_OPTS="${TESTSUITE_OPTS} -Dipv6"
+    export TESTSUITE_OPTS="${TESTSUITE_OPTS} -Dipv6 -Dnode0=[::1]"
   fi
 }
 
