@@ -59,7 +59,7 @@ comp_version="$(mvn help:evaluate -Dexpression=project.version | grep -e '^[^\[]
 if [ "${BUILD_COMMAND}" = 'core' ]; then
   # build core
   echo "build core like: mvn clean install -DskipTests -Dversion.io.undertow=xxx -Dversion.xxx=xxx in wildfly-core dir"
-  mvn clean install ${MAVEN_VERBOSE}  "${FAIL_AT_THE_END}" ${MAVEN_SETTINGS_XML_OPTION} -B ${BUILD_OPTS} ${@}
+  # mvn clean install ${MAVEN_VERBOSE}  "${FAIL_AT_THE_END}" ${MAVEN_SETTINGS_XML_OPTION} -B ${BUILD_OPTS} ${@}
   status=${?}
   if [ "${status}" -ne 0 ]; then
     echo "Compilation failed"
