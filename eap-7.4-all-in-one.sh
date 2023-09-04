@@ -60,7 +60,7 @@ if [ "${BUILD_COMMAND}" = 'core' ]; then
   # build core
   echo "build core in ${WORKSPACE}/wildfly-core/"
   ls -lah "${WORKSPACE}/wildfly-core/"
-  bash -x "${WORKSPACE}/wildfly-core/build.sh 2>&1"
+  bash -x "${WORKSPACE}/wildfly-core/build.sh" 2>&1
   status=${?}
   if [ "${status}" -ne 0 ]; then
     echo "Build Core failed"
@@ -69,11 +69,11 @@ if [ "${BUILD_COMMAND}" = 'core' ]; then
 elif [ "${BUILD_COMMAND}" = 'eap-build' ]; then
   # build eap
   echo "build eap in ${WORKSPACE}/eap/"
-  bash -x "${WORKSPACE}/eap/build-eap.sh 2>&1"
+  bash -x "${WORKSPACE}/eap/build-eap.sh" 2>&1
 elif [ "${BUILD_COMMAND}" = 'eap-test' ]; then
   # test eap
   echo "test eap in ${WORKSPACE}/eap/"
-  bash -x "${WORKSPACE}/eap/test-eap.sh 2>&1"
+  bash -x "${WORKSPACE}/eap/test-eap.sh" 2>&1
 fi
 
 
