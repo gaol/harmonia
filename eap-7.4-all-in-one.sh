@@ -47,7 +47,7 @@ cd "${WORKSPACE}/scripts"
 
 # for each comp
 
-comp_version="$(mvn help:evaluate -Dexpression=project.version | grep -e '^[^\[]')"
+# comp_version="$(mvn help:evaluate -Dexpression=project.version | grep -e '^[^\[]')"
 
 # each time it runs one of the following:
 # build core components
@@ -58,17 +58,21 @@ comp_version="$(mvn help:evaluate -Dexpression=project.version | grep -e '^[^\[]
 # build and test eap
 if [ "${BUILD_COMMAND}" = 'core' ]; then
   # build core
-  echo "build core like: mvn clean install -DskipTests -Dversion.io.undertow=xxx -Dversion.xxx=xxx in wildfly-core dir"
-  # mvn clean install ${MAVEN_VERBOSE}  "${FAIL_AT_THE_END}" ${MAVEN_SETTINGS_XML_OPTION} -B ${BUILD_OPTS} ${@}
+  echo "build core in ${WORKSPACE}/wildfly-core/"
+  bash -x "${WORKSPACE}/wildfly-core/build.sh 2>&1"
   status=${?}
   if [ "${status}" -ne 0 ]; then
-    echo "Compilation failed"
+    echo "Build Core failed"
     exit "${GIT_SKIP_BISECT_ERROR_CODE}"
   fi
-
-elif [ "${BUILD_COMMAND}" = 'eap' ]; then
+elif [ "${BUILD_COMMAND}" = 'eap-build' ]; then
   # build eap
-  echo "build eap"
+  echo "build eap in ${WORKSPACE}/eap/"
+  bash -x "${WORKSPACE}/eap/build-eap.sh 2>&1"
+elif [ "${BUILD_COMMAND}" = 'eap-test' ]; then
+  # test eap
+  echo "test eap in ${WORKSPACE}/eap/"
+  bash -x "${WORKSPACE}/eap/test-eap.sh 2>&1"
 fi
 
 
