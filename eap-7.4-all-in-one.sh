@@ -59,6 +59,7 @@ cd "${WORKSPACE}/scripts"
 if [ "${BUILD_COMMAND}" = 'core' ]; then
   # build core
   echo "build core in ${WORKSPACE}/wildfly-core/"
+  ls -lah "${WORKSPACE}/wildfly-core/"
   bash -x "${WORKSPACE}/wildfly-core/build.sh 2>&1"
   status=${?}
   if [ "${status}" -ne 0 ]; then
