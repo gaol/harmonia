@@ -1,6 +1,17 @@
 
 // This is a function can be run in Jenkins job dsl plugin, using `def allInOne = load "harmonia/AllInOne.groovy"`
 
+
+// a dictionary contains name and the version string of the components used in eap and wildfly-core
+def COMP_VERSIONS = [
+        "wildfly-core": "version.org.wildfly.core",
+        "undertow": "version.io.undertow"
+
+]
+
+
+
+
 def prepareScripts () {
     echo "Preparing scripts reading from payload.json in workspace: ${env.WORKSPACE}"
     def payload = readJSON file: "${env.WORKSPACE}/payload.json", returnPojo: true
@@ -18,6 +29,7 @@ def prepareScripts () {
         // m.get('language', 'Java')
         def buildCmd = wildflycore.get("build-command", "mvn clean install")
         def buildOpts = wildflycore["build-options"]
+        def wcVersion = COMP_VERSIONS.get(wc)
         def buildCommands = """#!/bin/bash
 echo "Build wildfly-core"
 pushd $workdir/wildfly-core
@@ -30,7 +42,7 @@ $buildCmd $buildOpts \$coreversions \${MAVEN_SETTINGS_XML_OPTION}
 # get the version, and append it to versions file in workspace
 mvn \${MAVEN_SETTINGS_XML_OPTION} help:evaluate -Dexpression=project.version
 version="\$(mvn \${MAVEN_SETTINGS_XML_OPTION} help:evaluate -Dexpression=project.version | grep -e '^[^\\[]')"
-echo -n " -Dversion.wildfly.core=\$version" >> $workspace/versions
+echo -n " -D${wcVersion}=\$version" >> $workspace/versions
 popd
         """
         writeFile file: "$workdir/wildfly-core/build.sh", text: buildCommands
@@ -77,7 +89,7 @@ if [ -f "$workspace/versions" ]; then
     versions="\$(cat $workspace/versions)"
 fi
 echo -e "Versions are: \$versions"
-$testCmd $testOpts \$TESTSUITE_OPTS \$versions \$coreversions 
+$testCmd $testOpts \$versions \$coreversions \$TESTSUITE_OPTS
 popd
         """
         writeFile file: "$workdir/eap/test-eap.sh", text: testCommands
