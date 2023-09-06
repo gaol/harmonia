@@ -1,5 +1,7 @@
 
-def prepareScriptsFunc () {
+// This is a function can be run in Jenkins job dsl plugin, using `def allInOne = load "harmonia/AllInOne.groovy"`
+
+def prepareScripts () {
     echo "Preparing scripts reading from payload.json in workspace: ${env.WORKSPACE}"
     def payload = readJSON file: "${env.WORKSPACE}/payload.json", returnPojo: true
     def workdir = "$workspace/workdir"
@@ -82,5 +84,5 @@ popd
     }
 }
 
-
+// remember to return this to be able to run in pipeline job
 return this
