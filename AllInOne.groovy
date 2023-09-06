@@ -81,3 +81,6 @@ popd
         writeFile file: "$workdir/eap/test-eap.sh", text: testCommands
     }
 }
+
+
+return this
