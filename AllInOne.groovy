@@ -3,7 +3,7 @@
 
 
 // a dictionary contains name and the version string of the components used in eap and wildfly-core
-def COMP_VERSIONS = [
+COMP_VERSIONS = [
         "wildfly-core": "version.org.wildfly.core",
         "undertow": "version.io.undertow"
 
