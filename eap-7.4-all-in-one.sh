@@ -20,10 +20,13 @@ readonly RERUN_FAILING_TESTS=${RERUN_FAILING_TESTS:-'0'}
 readonly OLD_RELEASES_FOLDER=${OLD_RELEASES_FOLDER:-/opt/old-as-releases}
 readonly FOLDER_DOES_NOT_EXIST_ERROR_CODE='3'
 
-export MAVEN_SETTINGS_XML=${MAVEN_SETTINGS_XML-'/home/master/settings.xml'}
+export MAVEN_SETTINGS_XML=${MAVEN_SETTINGS_XML-'/opt/tools/settings.xml'}
 export MAVEN_VERBOSE=${MAVEN_VERBOSE}
 export FAIL_AT_THE_END=${FAIL_AT_THE_END:-'-fae'}
 export BUILD_OPTS=${BUILD_OPTS:-'-Drelease'}
+export MAVEN_HOME=${MAVEN_HOME:-'/opt/apache/maven'}
+export MAVEN_OPTS=${MAVEN_OPTS:-'-Dmaven.wagon.http.ssl.insecure=true -Dhttps.protocols=TLSv1.2'}
+export JAVA_HOME=${JAVA_HOME:-'/opt/oracle/java'}
 
 # ${WORKSPACE} is under the workdir/ directory specified by build-wrapper.sh
 if [ -n "${WORKSPACE}" ]; then

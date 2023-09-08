@@ -9,24 +9,75 @@ COMP_VERSIONS = [
 
 ]
 
+def checkOutComp(def workdir, def comp, def core) {
+    def compName = comp['name']
+    sh: "mkdir -p $workdir/$compName"
+    dir("$workdir/$compName") {
+        git branch: comp['branch'], url: comp['giturl']
+    }
+    def buildCmd = comp.get("build-command", "mvn clean install")
+    def buildOpts = comp.get("build-options", "-DskipTests")
+    def versionName = comp.get("version.name", COMP_VERSIONS.get(compName))
+    if (versionName == null) {
+        throw new RuntimeException("FAIL:: No version name found for component: ${compName}")
+    }
+    def versionFile = core ? "coreversions" : "versions"
+    // return the full build scripts
+    def buildScripts = """#!/bin/bash
+echo "Build $compName"
+pushd $workdir/$compName
+$buildCmd $buildOpts \${MAVEN_SETTINGS_XML_OPTION}
 
-
+# get the version, and append it to versions file in workspace
+mvn \${MAVEN_SETTINGS_XML_OPTION} help:evaluate -Dexpression=project.version
+version="\$(mvn \${MAVEN_SETTINGS_XML_OPTION} help:evaluate -Dexpression=project.version | grep -e '^[^\\[]')"
+echo -n " -D${versionName}=\$version" >> $workspace/$versionFile
+popd
+        """
+    return buildScripts
+}
 
 def prepareScripts () {
     echo "Preparing scripts reading from payload.json in workspace: ${env.WORKSPACE}"
     def payload = readJSON file: "${env.WORKSPACE}/payload.json", returnPojo: true
     def workdir = "$workspace/workdir"
 
+    // components
+    def core_scripts = ""
+    def scripts = ""
+    if (payload.containsKey("components")) {
+        def comps = payload["components"]
+        for (comp in comps) {
+            if (comp.get("core", false)) {
+                env.HAS_CORE_COMPONENTS = 'true'
+                def compName = comp['name']
+                def buildScripts = checkOutComp(workdir, comp, true)
+                def buildScriptFile = "$workdir/$compName/build-${compName}.sh"
+                writeFile file: "$buildScriptFile", text: buildScripts
+                core_scripts += "$buildScriptFile \n"
+            } else {
+                env.HAS_COMPONENTS = 'true'
+                def compName = comp['name']
+                def buildScripts = checkOutComp(workdir, comp, false)
+                def buildScriptFile = "$workdir/$compName/build-${compName}.sh"
+                writeFile file: "$buildScriptFile", text: buildScripts
+                scripts += "$buildScriptFile \n"
+            }
+        }
+        writeFile file: "$workdir/core_components", text: core_scripts
+        writeFile file: "$workdir/components", text: scripts
+    }
+
     // wildfly-core
     def wc = "wildfly-core"
     if (payload.containsKey(wc)) {
+        env.HAS_CORE = 'true'
         // generate scripts to build wildfly-core
         def wildflycore = payload[wc]
         sh: "mkdir -p $workdir/wildfly-core"
         dir("$workdir/$wc") {
             git branch: wildflycore['branch'], url: wildflycore['giturl']
         }
-        // m.get('language', 'Java')
         def buildCmd = wildflycore.get("build-command", "mvn clean install")
         def buildOpts = wildflycore["build-options"]
         def wcVersion = COMP_VERSIONS.get(wc)
@@ -50,6 +101,7 @@ popd
 
     // eap
     if (payload.containsKey("eap")) {
+        env.HAS_EAP = 'true'
         // generate scripts to build eap
         def eap = payload['eap']
         sh: 'mkdir -p $workdir/eap'
