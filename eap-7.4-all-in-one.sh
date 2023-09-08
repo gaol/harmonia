@@ -85,9 +85,6 @@ elif [ "${BUILD_COMMAND}" = 'eap-test' ]; then
   export TESTSUITE_OPTS="${TESTSUITE_OPTS} -Dsurefire.rerunFailingTestsCount=${RERUN_FAILING_TESTS}"
   export TESTSUITE_OPTS="${TESTSUITE_OPTS} -Dsurefire.memory.args=${SUREFIRE_MEMORY_SETTINGS}"
   export TESTSUITE_OPTS="${TESTSUITE_OPTS} ${MAVEN_SETTINGS_XML_OPTION}"
-  cd "${WORKSPACE}/eap/testsuite" || exit "${FOLDER_DOES_NOT_EXIST_ERROR_CODE}"
-  mvn clean
-  cd ..
   # mvn clean install ${MAVEN_VERBOSE} "${FAIL_AT_THE_END}" ${TESTSUITE_OPTS}
   bash -x "${WORKSPACE}/eap/test-eap.sh" 2>&1
   status=${?}
