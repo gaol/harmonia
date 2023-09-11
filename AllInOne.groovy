@@ -1,12 +1,25 @@
 
 // This is a function can be run in Jenkins job dsl plugin, using `def allInOne = load "harmonia/AllInOne.groovy"`
 
+// not all core components are listed, just some common ones for convenient.
+CORE_COMPS = ["undertow", "elytron", "jboss-modules", "jboss-marshalling", "jboss-remoting", "xnio"]
 
 // a dictionary contains name and the version string of the components used in eap and wildfly-core
 COMP_VERSIONS = [
         "wildfly-core": "version.org.wildfly.core",
-        "undertow": "version.io.undertow"
-
+        "undertow": "version.io.undertow",
+        "elytron": "version.org.wildfly.security.elytron",
+        "xnio": "version.org.jboss.xnio",
+        "jbos-remoting": "version.org.jboss.remoting",
+        "jboss-marshalling": "version.org.jboss.marshalling.jboss-marshalling",
+        "jboss-modules": "version.org.jboss.modules.jboss-modules",
+        "hibernate": "version.org.hibernate",
+        "infinispan": "version.org.infinispan",
+        "ejb-client": "version.org.jboss.ejb-client",
+        "hal": "version.org.jboss.hal.console",
+        "ironjacamar": "version.org.jboss.ironjacamar",
+        "narayana": "version.org.jboss.narayana",
+        "resteasy": "version.org.jboss.resteasy"
 ]
 
 def checkOutComp(def workdir, def comp, def core) {
@@ -15,6 +28,7 @@ def checkOutComp(def workdir, def comp, def core) {
     dir("$workdir/$compName") {
         git branch: comp['branch'], url: comp['giturl']
     }
+    def branch = comp['branch']
     def buildCmd = comp.get("build-command", "mvn clean install")
     def buildOpts = comp.get("build-options", "-DskipTests")
     def versionName = comp.get("version.name", COMP_VERSIONS.get(compName))
@@ -24,7 +38,8 @@ def checkOutComp(def workdir, def comp, def core) {
     def versionFile = core ? "coreversions" : "versions"
     // return the full build scripts
     def buildScripts = """#!/bin/bash
-echo "Build $compName"
+set -ex
+echo "Build $compName, Branch to build and use is: $branch"
 pushd $workdir/$compName
 $buildCmd $buildOpts \${MAVEN_SETTINGS_XML_OPTION}
 
@@ -43,29 +58,28 @@ def prepareScripts () {
     def workdir = "$workspace/workdir"
 
     // components
-    def core_scripts = ""
-    def scripts = ""
+    def core_scripts_file = ""
+    def scripts_file = ""
     if (payload.containsKey("components")) {
         def comps = payload["components"]
         for (comp in comps) {
-            if (comp.get("core", false)) {
+            def compName = comp['name']
+            if (comp.get("core", CORE_COMPS.contains(compName))) {
                 env.HAS_CORE_COMPONENTS = 'true'
-                def compName = comp['name']
                 def buildScripts = checkOutComp(workdir, comp, true)
                 def buildScriptFile = "$workdir/$compName/build-${compName}.sh"
                 writeFile file: "$buildScriptFile", text: buildScripts
-                core_scripts += "$buildScriptFile \n"
+                core_scripts_file += "$buildScriptFile \n"
             } else {
                 env.HAS_COMPONENTS = 'true'
-                def compName = comp['name']
                 def buildScripts = checkOutComp(workdir, comp, false)
                 def buildScriptFile = "$workdir/$compName/build-${compName}.sh"
                 writeFile file: "$buildScriptFile", text: buildScripts
-                scripts += "$buildScriptFile \n"
+                scripts_file += "$buildScriptFile \n"
             }
         }
-        writeFile file: "$workdir/core_components", text: core_scripts
-        writeFile file: "$workdir/components", text: scripts
+        writeFile file: "$workspace/core_components", text: core_scripts_file
+        writeFile file: "$workspace/components", text: scripts_file
     }
 
     // wildfly-core
@@ -78,11 +92,13 @@ def prepareScripts () {
         dir("$workdir/$wc") {
             git branch: wildflycore['branch'], url: wildflycore['giturl']
         }
+        def branch = wildflycore['branch']
         def buildCmd = wildflycore.get("build-command", "mvn clean install")
         def buildOpts = wildflycore["build-options"]
         def wcVersion = COMP_VERSIONS.get(wc)
         def buildCommands = """#!/bin/bash
-echo "Build wildfly-core"
+set -ex
+echo "Build wildfly-core, The branch to build and use is: $branch"
 pushd $workdir/wildfly-core
 coreversions=""
 if [ -f "$workspace/coreversions" ]; then
@@ -113,6 +129,7 @@ popd
         def testCmd = eap.get("test-command", "mvn clean install")
         def testOpts = eap["test-options"]
         def buildCommands = """#!/bin/bash
+set -ex
 echo "Build eap"
 pushd $workdir/eap
 coreversions=""
@@ -130,6 +147,7 @@ popd
         writeFile file: "$workdir/eap/build-eap.sh", text: buildCommands
 
         def testCommands = """#!/bin/bash
+set -ex
 echo "Test eap"
 pushd $workdir/eap/testsuite
 coreversions=""

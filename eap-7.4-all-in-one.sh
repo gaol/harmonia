@@ -3,7 +3,7 @@
 #
 # Build EAP 7.4.x all in one
 #
-set -eo pipefail
+set -exo pipefail
 
 full_path="$(realpath "$0")"
 dir_path="$(dirname "$full_path")"
@@ -45,36 +45,38 @@ if [ -z "${PAYLOAD_URL}" ]; then
   exit 1
 fi
 
-# for each comp
-
-# comp_version="$(mvn help:evaluate -Dexpression=project.version | grep -e '^[^\[]')"
-
 # each time it runs one of the following:
-## build core components
-## build core
-## build non-core components
-## build eap
-
-if [ "${BUILD_COMMAND}" = 'core' ]; then
+if [ "${BUILD_COMMAND}" = 'core-components' ]; then
+  # build the core components
+  core_scripts_file="${WORKSPACE}/../core_components"
+  echo "build the core components by executing components file in workspace directory"
+  if [ -f "$core_scripts_file" ]; then
+    # shellcheck disable=SC2013
+    for sf in $(cat "${core_scripts_file}"); do
+      echo "Executing script: $sf"
+      bash -ex "${sf}" 2>&1
+    done
+  fi
+elif [ "${BUILD_COMMAND}" = 'components' ]; then
+  # build components of eap
+  scripts_file="${WORKSPACE}/../components"
+  echo "build the components of EAP by executing components file in workspace directory"
+  if [ -f "scripts_file" ]; then
+    # shellcheck disable=SC2013
+    for sf in $(cat "${scripts_file}"); do
+      echo "Executing script: $sf"
+      bash -ex "${sf}" 2>&1
+    done
+  fi
+elif [ "${BUILD_COMMAND}" = 'core' ]; then
   # build core
   echo "build core in ${WORKSPACE}/wildfly-core/"
-  ls -lah "${WORKSPACE}/wildfly-core/"
-  bash -x "${WORKSPACE}/wildfly-core/build.sh" 2>&1
-  status=${?}
-  if [ "${status}" -ne 0 ]; then
-    echo "Build Core Failed"
-    exit "${status}"
-  fi
+  bash -ex "${WORKSPACE}/wildfly-core/build.sh" 2>&1
 elif [ "${BUILD_COMMAND}" = 'eap-build' ]; then
   # build eap
   echo "build eap in ${WORKSPACE}/eap/"
   # mvn clean install ${MAVEN_VERBOSE}  "${FAIL_AT_THE_END}" ${MAVEN_SETTINGS_XML_OPTION} -B ${BUILD_OPTS}
-  bash -x "${WORKSPACE}/eap/build-eap.sh" 2>&1
-  status=${?}
-  if [ "${status}" -ne 0 ]; then
-    echo "Build EAP Failed"
-    exit "${status}"
-  fi
+  bash -ex "${WORKSPACE}/eap/build-eap.sh" 2>&1
 elif [ "${BUILD_COMMAND}" = 'eap-test' ]; then
   # test eap
   echo "Test eap in ${WORKSPACE}/eap/"
@@ -86,12 +88,7 @@ elif [ "${BUILD_COMMAND}" = 'eap-test' ]; then
   export TESTSUITE_OPTS="${TESTSUITE_OPTS} -Dsurefire.memory.args=${SUREFIRE_MEMORY_SETTINGS}"
   export TESTSUITE_OPTS="${TESTSUITE_OPTS} ${MAVEN_SETTINGS_XML_OPTION}"
   # mvn clean install ${MAVEN_VERBOSE} "${FAIL_AT_THE_END}" ${TESTSUITE_OPTS}
-  bash -x "${WORKSPACE}/eap/test-eap.sh" 2>&1
-  status=${?}
-  if [ "${status}" -ne 0 ]; then
-    echo "Test EAP Failed"
-    exit "${status}"
-  fi
+  bash -ex "${WORKSPACE}/eap/test-eap.sh" 2>&1
 fi
 
 
