@@ -74,6 +74,7 @@ fi
         }
         buildScripts = """#!/bin/bash
 set -ex
+shopt -s expand_aliases
 alias mvn11="JAVA_HOME=\$JAVA11_HOME && mvn"
 alias mvn17="JAVA_HOME=\$JAVA17_HOME && mvn"
 echo "Build $compName, Branch to build and use is: $branch"
