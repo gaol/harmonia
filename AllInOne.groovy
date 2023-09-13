@@ -54,13 +54,13 @@ def checkOutComp(def workdir, def comp, def core) {
             git branch: comp['branch'], url: giturl
         }
         def branch = comp['branch']
-        def buildCmd = comp.get("build-command", "mvn clean install")
+        def buildCmd = comp.get("build-command", "mvn")
         def jdk = comp['jdk']
         if (jdk != null) {
             if (jdk >= 17) {
-                buildCmd = "mvn17 clean install"
+                buildCmd = "mvn17"
             } else if (jdk >= 11) {
-                buildCmd = "mvn11 clean install"
+                buildCmd = "mvn11"
             }
         }
         def buildOpts = comp.get("build-options", "-DskipTests")
@@ -74,14 +74,16 @@ fi
         }
         buildScripts = """#!/bin/bash
 set -ex
+alias mvn11="JAVA_HOME=\$JAVA11_HOME && mvn"
+alias mvn17="JAVA_HOME=\$JAVA17_HOME && mvn"
 echo "Build $compName, Branch to build and use is: $branch"
 pushd $workdir/$compName
 coreversions=""
 $wf_core_options
-$buildCmd $buildOpts \$coreversions \${MAVEN_SETTINGS_XML_OPTION}
+$buildCmd clean install $buildOpts \$coreversions \${MAVEN_SETTINGS_XML_OPTION}
 
 # get the version, and append it to versions file in workspace
-mvn \${MAVEN_SETTINGS_XML_OPTION} help:evaluate -Dexpression=project.version
+$buildCmd \${MAVEN_SETTINGS_XML_OPTION} help:evaluate -Dexpression=project.version
 version="\$(mvn \${MAVEN_SETTINGS_XML_OPTION} help:evaluate -Dexpression=project.version | grep -e '^[^\\[]')"
 echo -n " -D${versionName}=\$version" >> $workspace/$versionFile
 popd

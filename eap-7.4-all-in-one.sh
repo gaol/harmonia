@@ -41,9 +41,6 @@ configure_mvn_home
 configure_mvn_opts
 configure_mvn_settings
 
-alias mvn11="JAVA_HOME=$JAVA11_HOME && mvn"
-alias mvn17="JAVA_HOME=$JAVA17_HOME && mvn"
-
 # each time it runs one of the following:
 if [ "${BUILD_COMMAND}" = 'core-components' ]; then
   # build the core components
