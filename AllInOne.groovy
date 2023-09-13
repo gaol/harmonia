@@ -55,6 +55,14 @@ def checkOutComp(def workdir, def comp, def core) {
         }
         def branch = comp['branch']
         def buildCmd = comp.get("build-command", "mvn clean install")
+        def jdk = comp['jdk']
+        if (jdk != null) {
+            if (jdk >= 17) {
+                buildCmd = "mvn17 clean install"
+            } else if (jdk >= 11) {
+                buildCmd = "mvn11 clean install"
+            }
+        }
         def buildOpts = comp.get("build-options", "-DskipTests")
         def wf_core_options = ""
         if (compName == "wildfly-core" || compName == "wildfly-core-eap" || compName == "wildfly-core-private") {

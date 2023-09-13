@@ -27,6 +27,8 @@ export BUILD_OPTS=${BUILD_OPTS:-'-Drelease'}
 export MAVEN_HOME=${MAVEN_HOME:-'/opt/apache/maven'}
 export MAVEN_OPTS=${MAVEN_OPTS:-'-Dmaven.wagon.http.ssl.insecure=true -Dhttps.protocols=TLSv1.2'}
 export JAVA_HOME=${JAVA_HOME:-'/opt/oracle/java'}
+export JAVA11_HOME=${JAVA11_HOME:-'/opt/oracle/openjdk-11.0.14.1_1'}
+export JAVA17_HOME=${JAVA17_HOME:-'/opt/oracle/jdk-17.0.1'}
 
 # ${WORKSPACE} is under the workdir/ directory specified by build-wrapper.sh
 if [ -n "${WORKSPACE}" ]; then
@@ -39,11 +41,8 @@ configure_mvn_home
 configure_mvn_opts
 configure_mvn_settings
 
-readonly PAYLOAD_URL=${PAYLOAD_URL}
-if [ -z "${PAYLOAD_URL}" ]; then
-  echo -n "PAYLOAD_URL needs to be specified"
-  exit 1
-fi
+alias mvn11="JAVA_HOME=$JAVA11_HOME && mvn"
+alias mvn17="JAVA_HOME=$JAVA17_HOME && mvn"
 
 # each time it runs one of the following:
 if [ "${BUILD_COMMAND}" = 'core-components' ]; then
