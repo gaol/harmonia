@@ -36,7 +36,10 @@ def checkOutComp(def workdir, def comp, def core) {
     if (version == null && giturl == null) {
         error "giturl must be specified for: $comp when version is not specified"
     }
-    def compName = comp.get('name', nameOfGit(giturl))
+    def compName = comp['name']
+    if (compName == null && giturl != null) {
+        compName = nameOfGit(giturl)
+    }
     def versionName = comp.get("version.name", COMP_VERSIONS.get(compName))
     if (versionName == null) {
         def message = error "FAIL:: No version name found for component: ${compName}"
