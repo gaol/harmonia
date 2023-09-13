@@ -36,12 +36,22 @@ def checkOutComp(def workdir, def comp, def core) {
         throw new RuntimeException("FAIL:: No version name found for component: ${compName}")
     }
     def versionFile = core ? "coreversions" : "versions"
+    def wf_core_options = ""
+    if (compName == "wildfly-core") {
+        wf_core_options = """
+if [ -f "$workspace/coreversions" ]; then
+    coreversions="\$(cat $workspace/coreversions)"
+fi
+"""
+    }
     // return the full build scripts
     def buildScripts = """#!/bin/bash
 set -ex
 echo "Build $compName, Branch to build and use is: $branch"
 pushd $workdir/$compName
-$buildCmd $buildOpts \${MAVEN_SETTINGS_XML_OPTION}
+coreversions=""
+$wf_core_options
+$buildCmd $buildOpts \$coreversions \${MAVEN_SETTINGS_XML_OPTION}
 
 # get the version, and append it to versions file in workspace
 mvn \${MAVEN_SETTINGS_XML_OPTION} help:evaluate -Dexpression=project.version
@@ -87,48 +97,12 @@ def prepareScripts () {
     if (payload.containsKey(wc)) {
         env.HAS_CORE = 'true'
         // generate scripts to build wildfly-core
-        def wildflycore = payload[wc]
-        sh: "mkdir -p $workdir/wildfly-core"
-        dir("$workdir/$wc") {
-            git branch: wildflycore['branch'], url: wildflycore['giturl']
-        }
-        def branch = wildflycore['branch']
-        def buildCmd = wildflycore.get("build-command", "mvn clean install")
-        def buildOpts = wildflycore["build-options"]
-        def wcVersion = COMP_VERSIONS.get(wc)
-        def buildCommands = """#!/bin/bash
-set -ex
-echo "Build wildfly-core, The branch to build and use is: $branch"
-pushd $workdir/wildfly-core
-coreversions=""
-if [ -f "$workspace/coreversions" ]; then
-    coreversions="\$(cat $workspace/coreversions)"
-fi
-$buildCmd $buildOpts \$coreversions \${MAVEN_SETTINGS_XML_OPTION}
-
-# get the version, and append it to versions file in workspace
-mvn \${MAVEN_SETTINGS_XML_OPTION} help:evaluate -Dexpression=project.version
-version="\$(mvn \${MAVEN_SETTINGS_XML_OPTION} help:evaluate -Dexpression=project.version | grep -e '^[^\\[]')"
-echo -n " -D${wcVersion}=\$version" >> $workspace/versions
-popd
-        """
+        def buildCommands = checkOutComp(workdir, payload[wc], false)
         writeFile file: "$workdir/wildfly-core/build.sh", text: buildCommands
     }
 
     // eap
-    if (payload.containsKey("eap")) {
-        env.HAS_EAP = 'true'
-        // generate scripts to build eap
-        def eap = payload['eap']
-        sh: 'mkdir -p $workdir/eap'
-        dir("$workdir/eap") {
-            git branch: eap['branch'], url: eap['giturl']
-        }
-        def buildCmd = eap.get("build-command", "mvn clean install")
-        def buildOpts = eap["build-options"]
-        def testCmd = eap.get("test-command", "mvn clean install")
-        def testOpts = eap["test-options"]
-        def buildCommands = """#!/bin/bash
+    def buildCommands = """#!/bin/bash
 set -ex
 echo "Build eap"
 pushd $workdir/eap
@@ -141,12 +115,12 @@ if [ -f "$workspace/versions" ]; then
     versions="\$(cat $workspace/versions)"
 fi
 echo -e "Versions are: \$versions, Core versions are: \$coreversions"
-$buildCmd $buildOpts \$versions \$coreversions \${MAVEN_SETTINGS_XML_OPTION} -B \${BUILD_OPTS}
+mvn clean install \$versions \$coreversions \${MAVEN_SETTINGS_XML_OPTION} -B \${BUILD_OPTS}
 popd
         """
-        writeFile file: "$workdir/eap/build-eap.sh", text: buildCommands
+    writeFile file: "$workdir/eap/build-eap.sh", text: buildCommands
 
-        def testCommands = """#!/bin/bash
+    def testCommands = """#!/bin/bash
 set -ex
 echo "Test eap"
 pushd $workdir/eap/testsuite
@@ -159,11 +133,10 @@ if [ -f "$workspace/versions" ]; then
     versions="\$(cat $workspace/versions)"
 fi
 echo -e "Versions are: \$versions"
-$testCmd $testOpts \$versions \$coreversions \$TESTSUITE_OPTS
+mvn clean install \$versions \$coreversions \$TESTSUITE_OPTS
 popd
         """
-        writeFile file: "$workdir/eap/test-eap.sh", text: testCommands
-    }
+    writeFile file: "$workdir/eap/test-eap.sh", text: testCommands
 }
 
 // remember to return this to be able to run in pipeline job
