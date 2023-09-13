@@ -31,34 +31,36 @@ def nameOfGit(def giturl) {
 
 def checkOutComp(def workdir, def comp, def core) {
     def giturl = comp['giturl']
+    def version = comp['version']
+    if (version == null && giturl == null) {
+        error "giturl must be specified for: $comp when version is not specified"
+    }
     def compName = comp.get('name', nameOfGit(giturl))
-    if (giturl == null || compName == null) {
-        error "giturl or name must be specified for: $comp"
-    }
-    echo "Check out $compName from $giturl ..."
-    sh: "mkdir -p $workdir/$compName"
-    dir("$workdir/$compName") {
-        git branch: comp['branch'], url: giturl
-    }
-    def branch = comp['branch']
-    def buildCmd = comp.get("build-command", "mvn clean install")
-    def buildOpts = comp.get("build-options", "-DskipTests")
     def versionName = comp.get("version.name", COMP_VERSIONS.get(compName))
     if (versionName == null) {
         def message = error "FAIL:: No version name found for component: ${compName}"
         error "$message"
     }
     def versionFile = core ? "coreversions" : "versions"
-    def wf_core_options = ""
-    if (compName == "wildfly-core" || compName == "wildfly-core-eap" || compName == "wildfly-core-private") {
-        wf_core_options = """
+    sh: "mkdir -p $workdir/$compName"
+    def buildScripts = ""
+    if (version == null) {
+        echo "Check out $compName from $giturl ..."
+        dir("$workdir/$compName") {
+            git branch: comp['branch'], url: giturl
+        }
+        def branch = comp['branch']
+        def buildCmd = comp.get("build-command", "mvn clean install")
+        def buildOpts = comp.get("build-options", "-DskipTests")
+        def wf_core_options = ""
+        if (compName == "wildfly-core" || compName == "wildfly-core-eap" || compName == "wildfly-core-private") {
+            wf_core_options = """
 if [ -f "$workspace/coreversions" ]; then
     coreversions="\$(cat $workspace/coreversions)"
 fi
 """
-    }
-    // return the full build scripts
-    def buildScripts = """#!/bin/bash
+        }
+        buildScripts = """#!/bin/bash
 set -ex
 echo "Build $compName, Branch to build and use is: $branch"
 pushd $workdir/$compName
@@ -72,6 +74,14 @@ version="\$(mvn \${MAVEN_SETTINGS_XML_OPTION} help:evaluate -Dexpression=project
 echo -n " -D${versionName}=\$version" >> $workspace/$versionFile
 popd
         """
+    } else {
+        buildScripts = """#!/bin/bash
+set -ex
+echo -n " -D${versionName}=$version" >> $workspace/$versionFile
+        """
+    }
+
+    // return the full build scripts
     return buildScripts
 }
 
@@ -116,6 +126,22 @@ def prepareScripts () {
     }
 
     // eap
+    sh: 'mkdir -p $workdir/eap'
+    def eapGitUrl = "$env.GIT_REPOSITORY_URL"
+    def eapBranch = "$env.GIT_REPOSITORY_BRANCH"
+    def buildOptions = "$env.BUILD_OPTS"
+    def testOptions = "$env.TESTSUITE_OPTS"
+    if (payload.containsKey("eap")) {
+        def eap = payload['eap']
+        eapGitUrl = eap.get('giturl', eapGitUrl)
+        eapBranch = eap.get('branch', eapBranch)
+        buildCmd = eap.get("build-command", "mvn clean install")
+        buildOptions = eap.get('build-options', buildOptions)
+        testOptions = eap.get('test-options', testOptions)
+    }
+    dir("$workdir/eap") {
+        git branch: eapBranch, url: eapGitUrl
+    }
     def buildCommands = """#!/bin/bash
 set -ex
 echo "Build eap"
@@ -129,14 +155,14 @@ if [ -f "$workspace/versions" ]; then
     versions="\$(cat $workspace/versions)"
 fi
 echo -e "Versions are: \$versions, Core versions are: \$coreversions"
-mvn clean install \$versions \$coreversions \${MAVEN_SETTINGS_XML_OPTION} -B \${BUILD_OPTS}
+mvn clean install $buildOptions \$versions \$coreversions \${MAVEN_SETTINGS_XML_OPTION} -B
 popd
         """
     writeFile file: "$workdir/eap/build-eap.sh", text: buildCommands
 
     def testCommands = """#!/bin/bash
 set -ex
-echo "Test eap"
+echo "Test EAP"
 pushd $workdir/eap/testsuite
 coreversions=""
 if [ -f "$workspace/coreversions" ]; then
@@ -147,7 +173,7 @@ if [ -f "$workspace/versions" ]; then
     versions="\$(cat $workspace/versions)"
 fi
 echo -e "Versions are: \$versions"
-mvn clean install \$versions \$coreversions \$TESTSUITE_OPTS
+mvn clean install $testOptions \$versions \$coreversions \$TESTSUITE_OPTS
 popd
         """
     writeFile file: "$workdir/eap/test-eap.sh", text: testCommands
