@@ -33,7 +33,9 @@ def checkOutComp(def workdir, def comp, def core) {
     def buildOpts = comp.get("build-options", "-DskipTests")
     def versionName = comp.get("version.name", COMP_VERSIONS.get(compName))
     if (versionName == null) {
-        throw new RuntimeException("FAIL:: No version name found for component: ${compName}")
+        def message = error "FAIL:: No version name found for component: ${compName}"
+        error "$message"
+        return "$message"
     }
     def versionFile = core ? "coreversions" : "versions"
     def wf_core_options = ""
@@ -65,6 +67,7 @@ popd
 def prepareScripts () {
     echo "Preparing scripts reading from payload.json in workspace: ${env.WORKSPACE}"
     def payload = readJSON file: "${env.WORKSPACE}/payload.json", returnPojo: true
+    echo "\n=============\nTry to test the payload:\n$payload \n====================\n"
     def workdir = "$workspace/workdir"
 
     // components
