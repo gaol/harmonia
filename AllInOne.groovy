@@ -30,6 +30,7 @@ def nameOfGit(def giturl) {
 }
 
 def checkOutComp(def workdir, def comp, def core) {
+    echo "Check out component: $comp \n"
     def giturl = comp['giturl']
     def version = comp['version']
     if (version == null && giturl == null) {
