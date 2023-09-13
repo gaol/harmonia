@@ -27,8 +27,8 @@ export BUILD_OPTS=${BUILD_OPTS:-'-Drelease'}
 export MAVEN_HOME=${MAVEN_HOME:-'/opt/apache/maven'}
 export MAVEN_OPTS=${MAVEN_OPTS:-'-Dmaven.wagon.http.ssl.insecure=true -Dhttps.protocols=TLSv1.2'}
 export JAVA_HOME=${JAVA_HOME:-'/opt/oracle/java'}
-export JAVA11_HOME=${JAVA11_HOME:-'/opt/oracle/openjdk-11.0.14.1_1'}
-export JAVA17_HOME=${JAVA17_HOME:-'/opt/oracle/jdk-17.0.1'}
+export JAVA11_HOME=${JAVA11_HOME:-'/opt/oracle/openjdk11-latest'}
+export JAVA17_HOME=${JAVA17_HOME:-'/opt/oracle/jdk17-latest'}
 
 # ${WORKSPACE} is under the workdir/ directory specified by build-wrapper.sh
 if [ -n "${WORKSPACE}" ]; then
