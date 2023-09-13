@@ -7,6 +7,8 @@ CORE_COMPS = ["undertow", "elytron", "jboss-modules", "jboss-marshalling", "jbos
 // a dictionary contains name and the version string of the components used in eap and wildfly-core
 COMP_VERSIONS = [
         "wildfly-core": "version.org.wildfly.core",
+        "wildfly-core-eap": "version.org.wildfly.core",
+        "wildfly-core-private": "version.org.wildfly.core",
         "undertow": "version.io.undertow",
         "elytron": "version.org.wildfly.security.elytron",
         "xnio": "version.org.jboss.xnio",
@@ -33,6 +35,7 @@ def checkOutComp(def workdir, def comp, def core) {
     if (giturl == null || compName == null) {
         error "giturl or name must be specified for: $comp"
     }
+    echo "Check out $compName from $giturl ..."
     sh: "mkdir -p $workdir/$compName"
     dir("$workdir/$compName") {
         git branch: comp['branch'], url: giturl
