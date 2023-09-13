@@ -57,7 +57,7 @@ elif [ "${BUILD_COMMAND}" = 'components' ]; then
   # build components of eap
   scripts_file="${WORKSPACE}/../components"
   echo "build the components of EAP by executing components file in workspace directory"
-  if [ -f "scripts_file" ]; then
+  if [ -f "$scripts_file" ]; then
     # shellcheck disable=SC2013
     for sf in $(cat "${scripts_file}"); do
       echo "Executing script: $sf"
