@@ -22,11 +22,20 @@ COMP_VERSIONS = [
         "resteasy": "version.org.jboss.resteasy"
 ]
 
+def nameOfGit(def giturl) {
+    def lastSlash = giturl.lastIndexOf('/')
+    return giturl.substring(lastSlash + 1)
+}
+
 def checkOutComp(def workdir, def comp, def core) {
-    def compName = comp['name']
+    def giturl = comp['giturl']
+    def compName = comp.get('name', nameOfGit(giturl))
+    if (giturl == null || compName == null) {
+        error "giturl or name must be specified for: $comp"
+    }
     sh: "mkdir -p $workdir/$compName"
     dir("$workdir/$compName") {
-        git branch: comp['branch'], url: comp['giturl']
+        git branch: comp['branch'], url: giturl
     }
     def branch = comp['branch']
     def buildCmd = comp.get("build-command", "mvn clean install")
@@ -35,11 +44,10 @@ def checkOutComp(def workdir, def comp, def core) {
     if (versionName == null) {
         def message = error "FAIL:: No version name found for component: ${compName}"
         error "$message"
-        return "$message"
     }
     def versionFile = core ? "coreversions" : "versions"
     def wf_core_options = ""
-    if (compName == "wildfly-core") {
+    if (compName == "wildfly-core" || compName == "wildfly-core-eap" || compName == "wildfly-core-private") {
         wf_core_options = """
 if [ -f "$workspace/coreversions" ]; then
     coreversions="\$(cat $workspace/coreversions)"
