@@ -54,13 +54,14 @@ def checkOutComp(def workdir, def comp, def core) {
             git branch: comp['branch'], url: giturl
         }
         def branch = comp['branch']
-        def buildCmd = comp.get("build-command", "mvn")
+        def buildCmd = comp.get("build-command", "mvn clean install")
         def jdk = comp['jdk']
+        def javaHomeSwitch = ""
         if (jdk != null) {
             if (jdk >= 17) {
-                buildCmd = "mvn17"
+                javaHomeSwitch = "JAVA_HOME=\$JAVA17_HOME && "
             } else if (jdk >= 11) {
-                buildCmd = "mvn11"
+                javaHomeSwitch = "JAVA_HOME=\$JAVA11_HOME && "
             }
         }
         def buildOpts = comp.get("build-options", "-DskipTests")
@@ -74,17 +75,14 @@ fi
         }
         buildScripts = """#!/bin/bash
 set -ex
-shopt -s expand_aliases
-alias mvn11="JAVA_HOME=\$JAVA11_HOME && mvn"
-alias mvn17="JAVA_HOME=\$JAVA17_HOME && mvn"
 echo "Build $compName, Branch to build and use is: $branch"
 pushd $workdir/$compName
 coreversions=""
 $wf_core_options
-$buildCmd clean install $buildOpts \$coreversions \${MAVEN_SETTINGS_XML_OPTION}
+$javaHomeSwitch $buildCmd $buildOpts \$coreversions \${MAVEN_SETTINGS_XML_OPTION}
 
 # get the version, and append it to versions file in workspace
-$buildCmd \${MAVEN_SETTINGS_XML_OPTION} help:evaluate -Dexpression=project.version
+$javaHomeSwitch mvn \${MAVEN_SETTINGS_XML_OPTION} help:evaluate -Dexpression=project.version
 version="\$(mvn \${MAVEN_SETTINGS_XML_OPTION} help:evaluate -Dexpression=project.version | grep -e '^[^\\[]')"
 echo -n " -D${versionName}=\$version" >> $workspace/$versionFile
 popd
