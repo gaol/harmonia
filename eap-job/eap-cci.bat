@@ -29,7 +29,7 @@ echo EAP version is: jboss-eap-%EAP_VERSION%
 echo Current ip version is: %ip%
 
 REM Set the testsuite command
-set "COMMAND=mvn clean install -fae -Djboss.dist=%WORKSPACE%\eap\jboss-eap-%EAP_VERSION% -DallTests -DfailIfNoTests=false -D%ip% -Dfile.encoding=UTF-8 -Dsurefire.system.args=\"-Dfile.encoding=UTF-8\""
+set "COMMAND=mvn clean install -fae -Djboss.dist=%WORKSPACE%\eap\jboss-eap-%EAP_VERSION% -DallTests -DfailIfNoTests=false -D%ip% -Dfile.encoding=UTF-8 -Dsurefire.system.args=-Dfile.encoding=UTF-8"
 
 echo Running testsuite command: %COMMAND%
 
