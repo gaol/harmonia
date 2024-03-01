@@ -69,6 +69,7 @@ def checkOutComp(def workdir, def comp, def core) {
         if (path != null) {
             srcPathSwitch = "/" + path
         }
+        echo "source path: $srcPathSwitch"
         def buildOpts = comp.get("build-options", "-DskipTests")
         def wf_core_options = ""
         if (compName == "wildfly-core" || compName == "wildfly-core-eap" || compName == "wildfly-core-private") {
