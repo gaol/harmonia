@@ -81,7 +81,7 @@ fi
         }
         buildScripts = """#!/bin/bash
 set -ex
-echo "Build $compName, Branch to build and use is: $branch"
+echo "Build $compName, Branch to build and use is: $branch, the source path is: $srcPathSwitch"
 pushd $workdir/$compName$srcPathSwitch
 coreversions=""
 $wf_core_options
