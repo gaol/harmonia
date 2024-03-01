@@ -64,6 +64,11 @@ def checkOutComp(def workdir, def comp, def core) {
                 javaHomeSwitch = "JAVA_HOME=\$JAVA11_HOME && "
             }
         }
+        def srcPathSwitch = ""
+        def path = comp['path']
+        if (path != null) {
+            srcPathSwitch = "/" + path
+        }
         def buildOpts = comp.get("build-options", "-DskipTests")
         def wf_core_options = ""
         if (compName == "wildfly-core" || compName == "wildfly-core-eap" || compName == "wildfly-core-private") {
@@ -76,7 +81,7 @@ fi
         buildScripts = """#!/bin/bash
 set -ex
 echo "Build $compName, Branch to build and use is: $branch"
-pushd $workdir/$compName
+pushd $workdir/$compName$srcPathSwitch
 coreversions=""
 $wf_core_options
 $javaHomeSwitch $buildCmd $buildOpts \$coreversions \${MAVEN_SETTINGS_XML_OPTION}
