@@ -148,8 +148,8 @@ def prepareScripts () {
     sh: 'mkdir -p $workdir/eap'
     def eapGitUrl = "$env.GIT_REPOSITORY_URL"
     def eapBranch = "$env.GIT_REPOSITORY_BRANCH"
-    def buildOptions = "$env.BUILD_OPTS"
-    def testOptions = "$env.TESTSUITE_OPTS"
+    def buildOptions = "-Drelease"
+    def testOptions = "-DallTests"
     if (payload.containsKey("eap")) {
         def eap = payload['eap']
         eapGitUrl = eap.get('giturl', eapGitUrl)
@@ -157,12 +157,6 @@ def prepareScripts () {
         buildCmd = eap.get("build-command", "mvn clean install")
         buildOptions = eap.get('build-options', buildOptions)
         testOptions = eap.get('test-options', testOptions)
-    }
-    if (buildOptions == null) {
-        buildOptions = ""
-    }
-    if (testOptions == null) {
-        testOptions = ""
     }
     dir("$workdir/eap") {
         git branch: eapBranch, url: eapGitUrl
