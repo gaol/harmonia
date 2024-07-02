@@ -158,6 +158,12 @@ def prepareScripts () {
         buildOptions = eap.get('build-options', buildOptions)
         testOptions = eap.get('test-options', testOptions)
     }
+    if (buildOptions == null) {
+        buildOptions = ""
+    }
+    if (testOptions == null) {
+        testOptions = ""
+    }
     dir("$workdir/eap") {
         git branch: eapBranch, url: eapGitUrl
     }
