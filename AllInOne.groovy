@@ -121,6 +121,7 @@ def prepareScripts () {
     if (payload.containsKey(wc)) {
         env.HAS_CORE = 'true'
         // generate scripts to build wildfly-core
+        payload[wc].put("version.name", "version.org.wildfly.core")
         def buildCommands = checkOutComp(workdir, payload[wc], false)
         writeFile file: "$workspace/scripts/build-wildfly-core.sh", text: buildCommands
     }
@@ -139,7 +140,6 @@ def prepareScripts () {
         buildOptions = eap.get('build-options', buildOptions)
         testOptions = eap.get('test-options', testOptions)
     }
-    //TODO check eap infor here !!!
     if (eapGitUrl == null || eapGitUrl == '') {
         error "giturl must be specified for: eap to build and test"
     }
