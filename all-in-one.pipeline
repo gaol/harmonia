@@ -41,6 +41,7 @@ pipeline {
                     dumpParams("${env.WORKSPACE}/job_params.txt")
                     env.HARMONIA_SCRIPT = "eap7-all-in-one.sh"
                     env.BUILD_SCRIPT = "${env.WORKSPACE}/hera/build-wrapper.sh"
+                    sh label: '', script: "mkdir -p ${env.WORKSPACE}/versions ${env.WORKSPACE}/scripts"
                     sh label: '', script: "curl -k -L -n -s -o ${env.WORKSPACE}/payload.json ${env.PAYLOAD_URL}"
                     def allInOne = load("harmonia/AllInOne.groovy")
                     allInOne.prepareScripts()

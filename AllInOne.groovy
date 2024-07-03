@@ -25,7 +25,6 @@ def checkOutComp(def workdir, def comp, def core) {
         error "$message"
     }
     def versionFile = core ? "versions/coreversions" : "versions/versions"
-    sh: "mkdir -p $workdir/$compName"
     def buildScripts = ""
     if (version == null) {
         echo "Check out $compName from $giturl ..."
@@ -88,8 +87,6 @@ def prepareScripts () {
     def payload = readJSON file: "${env.WORKSPACE}/payload.json", returnPojo: true
     echo "\n=============\nTry to test the payload:\n$payload \n====================\n"
     def workdir = "$workspace/workdir"
-
-    sh: "mkdir -p $workspace/scripts $workspace/versions"
 
     // components
     def core_scripts_file = ""
