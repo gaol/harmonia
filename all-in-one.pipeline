@@ -1,0 +1,114 @@
+
+def determineBuildResult() {
+  findText(textFinders: [
+    textFinder(regexp: /.INFO. BUILD FAILURE/, alsoCheckConsoleOutput: true, buildResult: 'UNSTABLE', changeCondition: 'MATCH_FOUND'),
+    textFinder(regexp: /.INFO. BUILD ERROR/, alsoCheckConsoleOutput: true, buildResult: 'FAILURE', changeCondition: 'MATCH_FOUND')
+  ])
+}
+
+def dumpParams(String outputFile) {
+  echo "Dumping all parameters to " + outputFile
+  def lines = ""
+  params.each() { param, value ->
+    lines = lines + "${param}=\"${value}\"\n"
+  }
+  writeFile file: outputFile, text: lines
+}
+
+pipeline {
+    agent any
+
+   options {
+        buildDiscarder(logRotator(numToKeepStr: '2', artifactNumToKeepStr: '2'))
+     }
+
+    parameters {
+       string(name: 'PAYLOAD_URL', defaultValue: '', description: 'The payload URL')
+    }
+
+    stages {
+        stage('Prep') {
+            steps {
+                cleanWs()
+
+                dir('hera') {
+                  git url: 'https://github.com/jboss-set/hera.git', branch: 'master', poll: false, changelog: false
+                }
+                dir('harmonia') {
+                  git branch: "eap7_all_in_one", url: "https://github.com/gaol/harmonia", poll: false, changelog: false
+                }
+                script {
+                    dumpParams("${env.WORKSPACE}/job_params.txt")
+                    env.HARMONIA_SCRIPT = "eap7-all-in-one.sh"
+                    env.BUILD_SCRIPT = "${env.WORKSPACE}/hera/build-wrapper.sh"
+                    sh label: '', script: "curl -k -L -n -s -o ${env.WORKSPACE}/payload.json ${env.PAYLOAD_URL}"
+                    def allInOne = load("harmonia/AllInOne.groovy")
+                    allInOne.prepareScripts()
+                }
+                // Start container
+              sh label: '', script: "${env.WORKSPACE}/hera/hera.sh run"
+            }
+        }
+        stage ('Build Core Components') {
+            when { expression { env.HAS_CORE_COMPONENTS == 'true' } }
+            steps {
+                script {
+                    env.BUILD_COMMAND = "core-components"
+                    sh label: '', script: "${env.WORKSPACE}/hera/hera.sh job ${env.WORKSPACE}/job_params.txt"
+                }
+            }
+        }
+        stage ('Build Core') {
+            when { expression { env.HAS_CORE == 'true' } }
+            steps {
+                script {
+                    env.BUILD_COMMAND = "core"
+                    sh label: '', script: "${env.WORKSPACE}/hera/hera.sh job ${env.WORKSPACE}/job_params.txt"
+                }
+            }
+        }
+        stage ('Build Components') {
+            when { expression { env.HAS_COMPONENTS == 'true' } }
+            steps {
+                script {
+                    env.BUILD_COMMAND = "components"
+                    sh label: '', script: "${env.WORKSPACE}/hera/hera.sh job ${env.WORKSPACE}/job_params.txt"
+                }
+            }
+        }
+        stage ('Build EAP') {
+            steps {
+              script {
+                    env.BUILD_COMMAND = "eap-build"
+                    sh label: '', script: "${env.WORKSPACE}/hera/hera.sh job ${env.WORKSPACE}/job_params.txt"
+                }
+            }
+        }
+        stage ('Test EAP') {
+            when { expression { currentBuild.currentResult == 'SUCCESS' } }
+            steps {
+              script {
+                    env.BUILD_COMMAND = "eap-test"
+                    sh label: '', script: "${env.WORKSPACE}/hera/hera.sh job ${env.WORKSPACE}/job_params.txt"
+                    junit "**/target/surefire-reports/*.xml"
+                    determineBuildResult()
+                }
+            }
+        }
+    }
+    post {
+        always {
+            script {
+             try {
+                  sh label: '', script: "${env.WORKSPACE}/hera/hera.sh stop"
+              } catch (err) {
+                  echo "Error while deleting container: ${err}"
+              }
+              archiveArtifacts artifacts: 'payload.json', fingerprint: true, followSymlinks: false, onlyIfSuccessful: false
+              
+            }
+            cleanWs()
+        }
+    }
+}
+

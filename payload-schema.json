@@ -1,0 +1,149 @@
+{
+  "$id": "https://github.com/gaol/harmonia/raw/eap7_all_in_one/payload-schema.jsonn",
+  "$schema": "https://json-schema.org/draft/2019-09/schema#",
+  "title": "Payload",
+  "description": "A Payload defines the versions of eap 7 components and how to compose a eap7 server from the sources.",
+  "type": "object",
+  "required": ["name"],
+  "properties": {
+    "name": {
+      "description": "Name of the eap7 payload",
+      "type": "string"
+    },
+    "components": {
+      "description": "The eap7 components information",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["giturl", "version.name"],
+        "properties": {
+          "name": {
+            "description": "name of the component, default will be parsed from giturl if undefined.",
+            "type": "string"
+          },
+          "giturl": {
+            "description": "Git url of the component",
+            "type": "string"
+          },
+          "branch": {
+            "description": "Branch of the component to build",
+            "type": "string"
+          },
+          "version": {
+            "description": "Version of the component to use, the build will be skipped for this component",
+            "type": "string"
+          },
+          "core": {
+            "description": "If the component is a core component",
+            "default": false,
+            "type": "boolean"
+          },
+          "version.name": {
+            "description": "version name of the component used for maven build, like: version.org.jboss.xnio for xnio in wildfly-core, like version.org.jboss.ironjacamar for ironjacamar for eap7 main repo",
+            "type": "string"
+          },
+          "build-command": {
+            "description": "The build command used to build component",
+            "default": "mvn clean install",
+            "type": "string"
+          },
+          "build-options": {
+            "description": "The build options used to build component",
+            "default": "-DskipTests",
+            "type": "string"
+          },
+          "jdk": {
+            "description": "The JDK version used to build the component, default use JDK8, you can specify 11+ or 17+ for JDK 11 or JDK 17",
+            "default": "-DallTests",
+            "type": "int"
+          },
+          "path": {
+            "description": "The source path inside of the component git repository in case the pom.xml is not in the top level directory.",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "eap": {
+      "description": "EAP information if GIT_REPOSITORY_URL and GIT_REPOSITORY_BRANCH are not defined in the jenkins job",
+      "type": "object",
+      "required": ["giturl", "branch"],
+      "properties": {
+        "giturl": {
+          "description": "Git url of the eap7",
+          "type": "string"
+        },
+        "branch": {
+          "description": "Branch from which the eap7 will be built on",
+          "type": "string"
+        },
+        "build-command": {
+          "description": "The build command used to build eap7",
+          "default": "mvn clean install",
+          "type": "string"
+        },
+        "build-options": {
+          "description": "The build options used to build eap7",
+          "default": "-Drelease",
+          "type": "string"
+        },
+        "test-options": {
+          "description": "The test options used to test eap7",
+          "default": "-DallTests",
+          "type": "string"
+        }
+      }
+    },
+    "wildfly-core": {
+      "description": "wildfly core information",
+      "type": "object",
+      "required": ["giturl", "branch"],
+      "properties": {
+        "name": {
+          "description": "name of the component, default will be parsed from giturl if undefined.",
+          "type": "string"
+        },
+        "giturl": {
+          "description": "Git url of the component",
+          "type": "string"
+        },
+        "branch": {
+          "description": "Branch of the component to build",
+          "type": "string"
+        },
+        "version": {
+          "description": "Version of the component to use, the build will be skipped for this component",
+          "type": "string"
+        },
+        "core": {
+          "description": "If the component is a core component",
+          "default": false,
+          "type": "boolean"
+        },
+        "version.name": {
+          "description": "version name of the component used for maven build, like: version.org.jboss.xnio for xnio in wildfly-core, like version.org.jboss.ironjacamar for ironjacamar for eap7 main repo",
+          "type": "string"
+        },
+        "build-command": {
+          "description": "The build command used to build component",
+          "default": "mvn clean install",
+          "type": "string"
+        },
+        "build-options": {
+          "description": "The build options used to build component",
+          "default": "-DskipTests",
+          "type": "string"
+        },
+        "jdk": {
+          "description": "The JDK version used to build the component, default use JDK8, you can specify 11+ or 17+ for JDK 11 or JDK 17",
+          "default": "-DallTests",
+          "type": "int"
+        },
+        "path": {
+          "description": "The source path inside of the component git repository in case the pom.xml is not in the top level directory.",
+          "type": "string"
+        }
+      }
+    }
+  }
+}

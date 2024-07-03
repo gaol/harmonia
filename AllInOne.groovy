@@ -1,29 +1,6 @@
 
 // This is a function can be run in Jenkins job dsl plugin, using `def allInOne = load "harmonia/AllInOne.groovy"`
 
-// not all core components are listed, just some common ones for convenient.
-CORE_COMPS = ["undertow", "elytron", "jboss-modules", "jboss-marshalling", "jboss-remoting", "xnio"]
-
-// a dictionary contains name and the version string of the components used in eap and wildfly-core
-COMP_VERSIONS = [
-        "wildfly-core": "version.org.wildfly.core",
-        "wildfly-core-eap": "version.org.wildfly.core",
-        "wildfly-core-private": "version.org.wildfly.core",
-        "undertow": "version.io.undertow",
-        "elytron": "version.org.wildfly.security.elytron",
-        "xnio": "version.org.jboss.xnio",
-        "jbos-remoting": "version.org.jboss.remoting",
-        "jboss-marshalling": "version.org.jboss.marshalling.jboss-marshalling",
-        "jboss-modules": "version.org.jboss.modules.jboss-modules",
-        "hibernate": "version.org.hibernate",
-        "infinispan": "version.org.infinispan",
-        "ejb-client": "version.org.jboss.ejb-client",
-        "hal": "version.org.jboss.hal.console",
-        "ironjacamar": "version.org.jboss.ironjacamar",
-        "narayana": "version.org.jboss.narayana",
-        "resteasy": "version.org.jboss.resteasy"
-]
-
 def nameOfGit(def giturl) {
     def lastSlash = giturl.lastIndexOf('/')
     return giturl.substring(lastSlash + 1)
@@ -33,6 +10,8 @@ def checkOutComp(def workdir, def comp, def core) {
     echo "Check out component: $comp \n"
     def giturl = comp['giturl']
     def version = comp['version']
+    // if version is specified, it will skip build, and use the version directly.
+    // if not, and branch is specified, it will be built from that branch.
     if (version == null && giturl == null) {
         error "giturl must be specified for: $comp when version is not specified"
     }
@@ -40,7 +19,7 @@ def checkOutComp(def workdir, def comp, def core) {
     if (compName == null && giturl != null) {
         compName = nameOfGit(giturl)
     }
-    def versionName = comp.get("version.name", COMP_VERSIONS.get(compName))
+    def versionName = comp.get("version.name")
     if (versionName == null) {
         def message = error "FAIL:: No version name found for component: ${compName}"
         error "$message"
@@ -117,7 +96,7 @@ def prepareScripts () {
         def comps = payload["components"]
         for (comp in comps) {
             def compName = comp['name']
-            if (comp.get("core", CORE_COMPS.contains(compName))) {
+            if (comp.get("core", false)) {
                 env.HAS_CORE_COMPONENTS = 'true'
                 def buildScripts = checkOutComp(workdir, comp, true)
                 def buildScriptFile = "$workdir/$compName/build-${compName}.sh"
@@ -158,6 +137,7 @@ def prepareScripts () {
         buildOptions = eap.get('build-options', buildOptions)
         testOptions = eap.get('test-options', testOptions)
     }
+    //TODO check eap infor here !!!
     dir("$workdir/eap") {
         git branch: eapBranch, url: eapGitUrl
     }

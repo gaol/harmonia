@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 #
-# Build EAP 7.4.x all in one
+# Build EAP 7 all in one
 #
 set -exo pipefail
 
