@@ -105,7 +105,10 @@ pipeline {
                   echo "Error while deleting container: ${err}"
               }
               archiveArtifacts artifacts: 'payload.json', fingerprint: true, followSymlinks: false, onlyIfSuccessful: false
-              
+              archiveArtifacts artifacts: 'versions/*', fingerprint: true, followSymlinks: false, onlyIfSuccessful: false
+              archiveArtifacts artifacts: 'hera/*.log', fingerprint: true, followSymlinks: false, onlyIfSuccessful: false
+              archiveArtifacts artifacts: 'scripts/*', fingerprint: true, followSymlinks: false, onlyIfSuccessful: false
+              archiveArtifacts artifacts: '*dist/target/jboss-eap-7.*.zip', fingerprint: true, followSymlinks: false, onlyIfSuccessful: true
             }
             cleanWs()
         }

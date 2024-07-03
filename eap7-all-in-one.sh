@@ -44,7 +44,7 @@ configure_mvn_settings
 # each time it runs one of the following:
 if [ "${BUILD_COMMAND}" = 'core-components' ]; then
   # build the core components
-  core_scripts_file="${WORKSPACE}/../core_components"
+  core_scripts_file="${WORKSPACE}/../scripts/core_components"
   echo "build the core components by executing components file in workspace directory"
   if [ -f "$core_scripts_file" ]; then
     # shellcheck disable=SC2013
@@ -55,7 +55,7 @@ if [ "${BUILD_COMMAND}" = 'core-components' ]; then
   fi
 elif [ "${BUILD_COMMAND}" = 'components' ]; then
   # build components of eap
-  scripts_file="${WORKSPACE}/../components"
+  scripts_file="${WORKSPACE}/../scripts/components"
   echo "build the components of EAP by executing components file in workspace directory"
   if [ -f "$scripts_file" ]; then
     # shellcheck disable=SC2013
@@ -67,12 +67,12 @@ elif [ "${BUILD_COMMAND}" = 'components' ]; then
 elif [ "${BUILD_COMMAND}" = 'core' ]; then
   # build core
   echo "build core in ${WORKSPACE}/wildfly-core/"
-  bash -ex "${WORKSPACE}/wildfly-core/build.sh" 2>&1
+  bash -ex "${WORKSPACE}/../scripts/build-wildfly-core.sh" 2>&1
 elif [ "${BUILD_COMMAND}" = 'eap-build' ]; then
   # build eap
   echo "build eap in ${WORKSPACE}/eap/"
   # mvn clean install ${MAVEN_VERBOSE}  "${FAIL_AT_THE_END}" ${MAVEN_SETTINGS_XML_OPTION} -B ${BUILD_OPTS}
-  bash -ex "${WORKSPACE}/eap/build-eap.sh" 2>&1
+  bash -ex "${WORKSPACE}/../scripts/build-eap.sh" 2>&1
 elif [ "${BUILD_COMMAND}" = 'eap-test' ]; then
   # test eap
   echo "Test eap in ${WORKSPACE}/eap/"
@@ -84,7 +84,7 @@ elif [ "${BUILD_COMMAND}" = 'eap-test' ]; then
   export TESTSUITE_OPTS="${TESTSUITE_OPTS} -Dsurefire.memory.args=${SUREFIRE_MEMORY_SETTINGS}"
   export TESTSUITE_OPTS="${TESTSUITE_OPTS} ${MAVEN_SETTINGS_XML_OPTION}"
   # mvn clean install ${MAVEN_VERBOSE} "${FAIL_AT_THE_END}" ${TESTSUITE_OPTS}
-  bash -ex "${WORKSPACE}/eap/test-eap.sh" 2>&1
+  bash -ex "${WORKSPACE}/../scripts/test-eap.sh" 2>&1
 fi
 
 

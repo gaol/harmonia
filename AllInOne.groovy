@@ -24,7 +24,7 @@ def checkOutComp(def workdir, def comp, def core) {
         def message = error "FAIL:: No version name found for component: ${compName}"
         error "$message"
     }
-    def versionFile = core ? "coreversions" : "versions"
+    def versionFile = core ? "versions/coreversions" : "versions/versions"
     sh: "mkdir -p $workdir/$compName"
     def buildScripts = ""
     if (version == null) {
@@ -53,8 +53,8 @@ def checkOutComp(def workdir, def comp, def core) {
         def wf_core_options = ""
         if (compName == "wildfly-core" || compName == "wildfly-core-eap" || compName == "wildfly-core-private") {
             wf_core_options = """
-if [ -f "$workspace/coreversions" ]; then
-    coreversions="\$(cat $workspace/coreversions)"
+if [ -f "$workspace/versions/coreversions" ]; then
+    coreversions="\$(cat $workspace/versions/coreversions)"
 fi
 """
         }
@@ -89,6 +89,8 @@ def prepareScripts () {
     echo "\n=============\nTry to test the payload:\n$payload \n====================\n"
     def workdir = "$workspace/workdir"
 
+    sh: "mkdir -p $workspace/scripts $workspace/versions"
+
     // components
     def core_scripts_file = ""
     def scripts_file = ""
@@ -99,19 +101,19 @@ def prepareScripts () {
             if (comp.get("core", false)) {
                 env.HAS_CORE_COMPONENTS = 'true'
                 def buildScripts = checkOutComp(workdir, comp, true)
-                def buildScriptFile = "$workdir/$compName/build-${compName}.sh"
+                def buildScriptFile = "$workspace/scripts/build-${compName}.sh"
                 writeFile file: "$buildScriptFile", text: buildScripts
                 core_scripts_file += "$buildScriptFile \n"
             } else {
                 env.HAS_COMPONENTS = 'true'
                 def buildScripts = checkOutComp(workdir, comp, false)
-                def buildScriptFile = "$workdir/$compName/build-${compName}.sh"
+                def buildScriptFile = "$workspace/scripts/build-${compName}.sh"
                 writeFile file: "$buildScriptFile", text: buildScripts
                 scripts_file += "$buildScriptFile \n"
             }
         }
-        writeFile file: "$workspace/core_components", text: core_scripts_file
-        writeFile file: "$workspace/components", text: scripts_file
+        writeFile file: "$workspace/scripts/core_components", text: core_scripts_file
+        writeFile file: "$workspace/scripts/components", text: scripts_file
     }
 
     // wildfly-core
@@ -120,7 +122,7 @@ def prepareScripts () {
         env.HAS_CORE = 'true'
         // generate scripts to build wildfly-core
         def buildCommands = checkOutComp(workdir, payload[wc], false)
-        writeFile file: "$workdir/wildfly-core/build.sh", text: buildCommands
+        writeFile file: "$workspace/scripts/build-wildfly-core.sh", text: buildCommands
     }
 
     // eap
@@ -138,6 +140,12 @@ def prepareScripts () {
         testOptions = eap.get('test-options', testOptions)
     }
     //TODO check eap infor here !!!
+    if (eapGitUrl == null || eapGitUrl == '') {
+        error "giturl must be specified for: eap to build and test"
+    }
+    if (eapBranch == null || eapBranch == '') {
+        error "branch must be specified for: eap to build and test"
+    }
     dir("$workdir/eap") {
         git branch: eapBranch, url: eapGitUrl
     }
@@ -146,36 +154,36 @@ set -ex
 echo "Build eap"
 pushd $workdir/eap
 coreversions=""
-if [ -f "$workspace/coreversions" ]; then
-    coreversions="\$(cat $workspace/coreversions)"
+if [ -f "$workspace/versions/coreversions" ]; then
+    coreversions="\$(cat $workspace/versions/coreversions)"
 fi
 versions=""
-if [ -f "$workspace/versions" ]; then
-    versions="\$(cat $workspace/versions)"
+if [ -f "$workspace/versions/versions" ]; then
+    versions="\$(cat $workspace/versions/versions)"
 fi
 echo -e "Versions are: \$versions, Core versions are: \$coreversions"
 mvn clean install $buildOptions \$versions \$coreversions \${MAVEN_SETTINGS_XML_OPTION} -B
 popd
         """
-    writeFile file: "$workdir/eap/build-eap.sh", text: buildCommands
+    writeFile file: "$workspace/scripts/build-eap.sh", text: buildCommands
 
     def testCommands = """#!/bin/bash
 set -ex
 echo "Test EAP"
 pushd $workdir/eap/testsuite
 coreversions=""
-if [ -f "$workspace/coreversions" ]; then
-    coreversions="\$(cat $workspace/coreversions)"
+if [ -f "$workspace/versions/coreversions" ]; then
+    coreversions="\$(cat $workspace/versions/coreversions)"
 fi
 versions=""
-if [ -f "$workspace/versions" ]; then
-    versions="\$(cat $workspace/versions)"
+if [ -f "$workspace/versions/versions" ]; then
+    versions="\$(cat $workspace/versions/versions)"
 fi
 echo -e "Versions are: \$versions"
 mvn clean install $testOptions \$versions \$coreversions \$TESTSUITE_OPTS
 popd
         """
-    writeFile file: "$workdir/eap/test-eap.sh", text: testCommands
+    writeFile file: "$workspace/scripts/test-eap.sh", text: testCommands
 }
 
 // remember to return this to be able to run in pipeline job
