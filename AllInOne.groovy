@@ -50,7 +50,7 @@ def checkOutComp(def workdir, def comp, def core) {
         echo "source path: $srcPathSwitch"
         def buildOpts = comp.get("build-options", "-DskipTests")
         def wf_core_options = ""
-        if (compName == "wildfly-core" || compName == "wildfly-core-eap" || compName == "wildfly-core-private") {
+        if (compName == "wildfly-core" || compName == "wildfly-core-eap" || compName == "wildfly-core-private" || compName.startsWith("wildfly-core")) {
             wf_core_options = """
 if [ -f "$workspace/versions/coreversions" ]; then
     coreversions="\$(cat $workspace/versions/coreversions)"
