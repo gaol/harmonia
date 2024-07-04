@@ -19,12 +19,14 @@ def checkOutComp(def workdir, def comp, def core) {
     if (compName == null && giturl != null) {
         compName = nameOfGit(giturl)
     }
+    if (compName == null) {
+        error "Unknown name for $comp"
+    }
     def versionName = comp.get("version.name")
     if (versionName == null) {
-        def message = error "FAIL:: No version name found for component: ${compName}"
-        error "$message"
+        error "FAIL:: No version name found for component: ${compName}"
     }
-    def versionFile = core ? "versions/coreversions" : "versions/versions"
+    def versionFile = comp.get("core", false) ? "versions/coreversions" : "versions/versions"
     def buildScripts = ""
     if (version == null) {
         echo "Check out $compName from $giturl ..."
@@ -41,16 +43,18 @@ def checkOutComp(def workdir, def comp, def core) {
             } else if (jdk >= 11) {
                 javaHomeSwitch = "JAVA_HOME=\$JAVA11_HOME && "
             }
+            echo "Switch JDK to $javaHomeSwitch"
         }
         def srcPathSwitch = ""
         def path = comp['path']
         if (path != null) {
             srcPathSwitch = "/" + path
+            echo "source path: $srcPathSwitch"
         }
-        echo "source path: $srcPathSwitch"
         def buildOpts = comp.get("build-options", "-DskipTests")
+        echo "Build options for $compName : $buildOpts"
         def wf_core_options = ""
-        if (compName == "wildfly-core" || compName == "wildfly-core-eap" || compName == "wildfly-core-private" || compName.startsWith("wildfly-core")) {
+        if (core) {
             wf_core_options = """
 if [ -f "$workspace/versions/coreversions" ]; then
     coreversions="\$(cat $workspace/versions/coreversions)"
@@ -61,7 +65,6 @@ fi
 set -ex
 echo "Build $compName, Branch to build and use is: $branch, the source path is: $srcPathSwitch"
 pushd $workdir/$compName$srcPathSwitch
-coreversions=""
 $wf_core_options
 $javaHomeSwitch $buildCmd $buildOpts \$coreversions \${MAVEN_SETTINGS_XML_OPTION}
 
@@ -97,12 +100,14 @@ def prepareScripts () {
             def compName = comp['name']
             if (comp.get("core", false)) {
                 env.HAS_CORE_COMPONENTS = 'true'
-                def buildScripts = checkOutComp(workdir, comp, true)
+                echo "INFO: Checking out the core component $compName ..."
+                def buildScripts = checkOutComp(workdir, comp, false)
                 def buildScriptFile = "$workspace/scripts/build-${compName}.sh"
                 writeFile file: "$buildScriptFile", text: buildScripts
                 core_scripts_file += "$buildScriptFile \n"
             } else {
                 env.HAS_COMPONENTS = 'true'
+                echo "INFO: Checking out EAP component $compName ..."
                 def buildScripts = checkOutComp(workdir, comp, false)
                 def buildScriptFile = "$workspace/scripts/build-${compName}.sh"
                 writeFile file: "$buildScriptFile", text: buildScripts
@@ -119,8 +124,15 @@ def prepareScripts () {
         env.HAS_CORE = 'true'
         // generate scripts to build wildfly-core
         payload[wc].put("version.name", "version.org.wildfly.core")
-        def buildCommands = checkOutComp(workdir, payload[wc], false)
+        if (!payload[wc].containsKey("build-options")) {
+            payload[wc].put("build-options", "-DallTests") // default use -DallTests for wildfly-core unless it is specified
+        }
+        def buildCommands = checkOutComp(workdir, payload[wc], true)
         writeFile file: "$workspace/scripts/build-wildfly-core.sh", text: buildCommands
+    }
+
+    if (env.HAS_CORE_COMPONENTS && !env.HAS_CORE) {
+        error "When core components are specified, the wildfly-core needs to be specified as well."
     }
 
     // eap

@@ -1,10 +1,10 @@
 {
-  "$id": "https://github.com/gaol/harmonia/raw/eap7_all_in_one/payload-schema.jsonn",
+  "$id": "https://github.com/gaol/harmonia/raw/eap7_all_in_one/payload-schema.json",
   "$schema": "https://json-schema.org/draft/2019-09/schema#",
   "title": "Payload",
   "description": "A Payload defines the versions of eap 7 components and how to compose a eap7 server from the sources.",
   "type": "object",
-  "required": ["name"],
+  "required": ["name", "eap"],
   "properties": {
     "name": {
       "description": "Name of the eap7 payload",
@@ -22,7 +22,7 @@
             "type": "string"
           },
           "giturl": {
-            "description": "Git url of the component",
+            "description": "Git url of the component. This is required. unless version is specified.",
             "type": "string"
           },
           "branch": {
@@ -34,12 +34,12 @@
             "type": "string"
           },
           "core": {
-            "description": "If the component is a core component",
+            "description": "If the component is a core component. This must be specified to true if it is a core component, like undertow",
             "default": false,
             "type": "boolean"
           },
           "version.name": {
-            "description": "version name of the component used for maven build, like: version.org.jboss.xnio for xnio in wildfly-core, like version.org.jboss.ironjacamar for ironjacamar for eap7 main repo",
+            "description": "version name of the component used for maven build, like: version.org.jboss.xnio for xnio in wildfly-core, like version.org.jboss.ironjacamar for ironjacamar for eap7 main repo. This is required.",
             "type": "string"
           },
           "build-command": {
@@ -55,7 +55,7 @@
           "jdk": {
             "description": "The JDK version used to build the component, default use JDK8, you can specify 11+ or 17+ for JDK 11 or JDK 17",
             "default": "-DallTests",
-            "type": "int"
+            "type": "integer"
           },
           "path": {
             "description": "The source path inside of the component git repository in case the pom.xml is not in the top level directory.",
@@ -99,48 +99,17 @@
       "type": "object",
       "required": ["giturl", "branch"],
       "properties": {
-        "name": {
-          "description": "name of the component, default will be parsed from giturl if undefined.",
-          "type": "string"
-        },
         "giturl": {
-          "description": "Git url of the component",
+          "description": "Git url of the wildfly-core",
           "type": "string"
         },
         "branch": {
-          "description": "Branch of the component to build",
-          "type": "string"
-        },
-        "version": {
-          "description": "Version of the component to use, the build will be skipped for this component",
-          "type": "string"
-        },
-        "core": {
-          "description": "If the component is a core component",
-          "default": false,
-          "type": "boolean"
-        },
-        "version.name": {
-          "description": "version name of the component used for maven build, like: version.org.jboss.xnio for xnio in wildfly-core, like version.org.jboss.ironjacamar for ironjacamar for eap7 main repo",
-          "type": "string"
-        },
-        "build-command": {
-          "description": "The build command used to build component",
-          "default": "mvn clean install",
+          "description": "Branch of the wildfly-core",
           "type": "string"
         },
         "build-options": {
-          "description": "The build options used to build component",
-          "default": "-DskipTests",
-          "type": "string"
-        },
-        "jdk": {
-          "description": "The JDK version used to build the component, default use JDK8, you can specify 11+ or 17+ for JDK 11 or JDK 17",
+          "description": "The build options used to build component. Default will run all tests for core",
           "default": "-DallTests",
-          "type": "int"
-        },
-        "path": {
-          "description": "The source path inside of the component git repository in case the pom.xml is not in the top level directory.",
           "type": "string"
         }
       }
