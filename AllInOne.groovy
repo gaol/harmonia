@@ -34,7 +34,7 @@ def checkOutComp(def workdir, def comp, def core) {
             git branch: comp['branch'], url: giturl
         }
         def branch = comp['branch']
-        def buildCmd = comp.get("build-command", "mvn clean install")
+        def buildCmd = comp.get("build-command", "mvn clean install \${MAVEN_SETTINGS_XML_OPTION} ")
         def jdk = comp['jdk']
         def javaHomeSwitch = ""
         if (jdk != null) {
