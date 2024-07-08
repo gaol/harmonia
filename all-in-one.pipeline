@@ -15,15 +15,33 @@ def dumpParams(String outputFile) {
   writeFile file: outputFile, text: lines
 }
 
-def makesureContainerRunning() {
-  if (env.CONTAINER_STARTED != 'true') {
-    try {
-      sh label: '', script: "${env.WORKSPACE}/hera/hera.sh run"
-      env.CONTAINER_STARTED = 'true'
-    } catch (err) {
-      echo "Error while starting container: ${err}"
+def makeItReady() {
+    if (env.READY_TO_RUN != 'true') {
+        dir('hera') {
+            git url: 'https://github.com/jboss-set/hera.git', branch: 'master', poll: false, changelog: false
+        }
+        dir('harmonia') {
+            git branch: "eap7_all_in_one", url: "https://github.com/gaol/harmonia", poll: false, changelog: false
+        }
+        script {
+            dumpParams("${env.WORKSPACE}/job_params.txt")
+            env.HARMONIA_SCRIPT = "eap7-all-in-one.sh"
+            env.BUILD_SCRIPT = "${env.WORKSPACE}/hera/build-wrapper.sh"
+            sh label: '', script: "mkdir -p ${env.WORKSPACE}/versions ${env.WORKSPACE}/scripts"
+            sh label: '', script: "curl -k -L -n -s -o ${env.WORKSPACE}/payload.json ${env.PAYLOAD_URL}"
+            def allInOne = load("harmonia/AllInOne.groovy")
+            allInOne.prepareScripts()
+        }
+        // Start container
+        try {
+            sh label: '', script: "${env.WORKSPACE}/hera/hera.sh run"
+            env.READY_TO_RUN = 'true'
+        } catch (err) {
+            error "Error while starting container: ${err}"
+        }
+    } else {
+        echo "Already prepared, container started, ready to run!"
     }
-  }
 }
 
 pipeline {
@@ -41,32 +59,15 @@ pipeline {
         stage('Prep') {
             steps {
                 cleanWs()
-
-                dir('hera') {
-                  git url: 'https://github.com/jboss-set/hera.git', branch: 'master', poll: false, changelog: false
-                }
-                dir('harmonia') {
-                  git branch: "eap7_all_in_one", url: "https://github.com/gaol/harmonia", poll: false, changelog: false
-                }
-                script {
-                    dumpParams("${env.WORKSPACE}/job_params.txt")
-                    env.HARMONIA_SCRIPT = "eap7-all-in-one.sh"
-                    env.BUILD_SCRIPT = "${env.WORKSPACE}/hera/build-wrapper.sh"
-                    sh label: '', script: "mkdir -p ${env.WORKSPACE}/versions ${env.WORKSPACE}/scripts"
-                    sh label: '', script: "curl -k -L -n -s -o ${env.WORKSPACE}/payload.json ${env.PAYLOAD_URL}"
-                    def allInOne = load("harmonia/AllInOne.groovy")
-                    allInOne.prepareScripts()
-                }
-                // Start container
-                makesureContainerRunning()
+                makeItReady()
             }
         }
         stage ('Build Core Components') {
             when { expression { env.HAS_CORE_COMPONENTS == 'true' } }
             steps {
                 script {
+                    makeItReady()
                     env.BUILD_COMMAND = "core-components"
-                    makesureContainerRunning()
                     sh label: '', script: "${env.WORKSPACE}/hera/hera.sh job ${env.WORKSPACE}/job_params.txt"
                 }
             }
@@ -75,8 +76,8 @@ pipeline {
             when { expression { env.HAS_CORE == 'true' } }
             steps {
                 script {
+                    makeItReady()
                     env.BUILD_COMMAND = "core"
-                    makesureContainerRunning()
                     sh label: '', script: "${env.WORKSPACE}/hera/hera.sh job ${env.WORKSPACE}/job_params.txt"
                 }
             }
@@ -85,8 +86,8 @@ pipeline {
             when { expression { env.HAS_COMPONENTS == 'true' } }
             steps {
                 script {
+                    makeItReady()
                     env.BUILD_COMMAND = "components"
-                    makesureContainerRunning()
                     sh label: '', script: "${env.WORKSPACE}/hera/hera.sh job ${env.WORKSPACE}/job_params.txt"
                 }
             }
@@ -94,8 +95,8 @@ pipeline {
         stage ('Build EAP') {
             steps {
               script {
+                    makeItReady()
                     env.BUILD_COMMAND = "eap-build"
-                    makesureContainerRunning()
                     sh label: '', script: "${env.WORKSPACE}/hera/hera.sh job ${env.WORKSPACE}/job_params.txt"
                 }
             }
@@ -104,8 +105,8 @@ pipeline {
             when { expression { currentBuild.currentResult == 'SUCCESS' } }
             steps {
               script {
+                    makeItReady()
                     env.BUILD_COMMAND = "eap-test"
-                    makesureContainerRunning()
                     sh label: '', script: "${env.WORKSPACE}/hera/hera.sh job ${env.WORKSPACE}/job_params.txt"
                     junit "**/target/surefire-reports/*.xml"
                     determineBuildResult()
@@ -118,9 +119,9 @@ pipeline {
             script {
              try {
                   sh label: '', script: "${env.WORKSPACE}/hera/hera.sh stop"
-                  env.CONTAINER_STARTED = 'false'
+                  env.READY_TO_RUN = 'false'
               } catch (err) {
-                  echo "Error while deleting container: ${err}"
+                  error "Error while deleting container: ${err}"
               }
               archiveArtifacts artifacts: 'payload.json', fingerprint: true, followSymlinks: false, onlyIfSuccessful: false
               archiveArtifacts artifacts: 'versions/*', fingerprint: true, followSymlinks: false, onlyIfSuccessful: false
