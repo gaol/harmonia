@@ -15,6 +15,17 @@ def dumpParams(String outputFile) {
   writeFile file: outputFile, text: lines
 }
 
+def makesureContainerRunning() {
+  if (env.CONTAINER_STARTED != 'true') {
+    try {
+      sh label: '', script: "${env.WORKSPACE}/hera/hera.sh run"
+      env.CONTAINER_STARTED = 'true'
+    } catch (err) {
+      echo "Error while starting container: ${err}"
+    }
+  }
+}
+
 pipeline {
     agent any
 
@@ -47,7 +58,7 @@ pipeline {
                     allInOne.prepareScripts()
                 }
                 // Start container
-              sh label: '', script: "${env.WORKSPACE}/hera/hera.sh run"
+                makesureContainerRunning()
             }
         }
         stage ('Build Core Components') {
@@ -55,6 +66,7 @@ pipeline {
             steps {
                 script {
                     env.BUILD_COMMAND = "core-components"
+                    makesureContainerRunning()
                     sh label: '', script: "${env.WORKSPACE}/hera/hera.sh job ${env.WORKSPACE}/job_params.txt"
                 }
             }
@@ -64,6 +76,7 @@ pipeline {
             steps {
                 script {
                     env.BUILD_COMMAND = "core"
+                    makesureContainerRunning()
                     sh label: '', script: "${env.WORKSPACE}/hera/hera.sh job ${env.WORKSPACE}/job_params.txt"
                 }
             }
@@ -73,6 +86,7 @@ pipeline {
             steps {
                 script {
                     env.BUILD_COMMAND = "components"
+                    makesureContainerRunning()
                     sh label: '', script: "${env.WORKSPACE}/hera/hera.sh job ${env.WORKSPACE}/job_params.txt"
                 }
             }
@@ -81,6 +95,7 @@ pipeline {
             steps {
               script {
                     env.BUILD_COMMAND = "eap-build"
+                    makesureContainerRunning()
                     sh label: '', script: "${env.WORKSPACE}/hera/hera.sh job ${env.WORKSPACE}/job_params.txt"
                 }
             }
@@ -90,6 +105,7 @@ pipeline {
             steps {
               script {
                     env.BUILD_COMMAND = "eap-test"
+                    makesureContainerRunning()
                     sh label: '', script: "${env.WORKSPACE}/hera/hera.sh job ${env.WORKSPACE}/job_params.txt"
                     junit "**/target/surefire-reports/*.xml"
                     determineBuildResult()
@@ -102,6 +118,7 @@ pipeline {
             script {
              try {
                   sh label: '', script: "${env.WORKSPACE}/hera/hera.sh stop"
+                  env.CONTAINER_STARTED = 'false'
               } catch (err) {
                   echo "Error while deleting container: ${err}"
               }
