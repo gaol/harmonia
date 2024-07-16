@@ -41,6 +41,12 @@ configure_mvn_home
 configure_mvn_opts
 configure_mvn_settings
 
+kill_running_eaps() {
+  for pid in `jps -lV|grep jboss-modules|cut -d " " -f1`; do
+    kill -9 $pid
+  done
+}
+
 # each time it runs one of the following:
 if [ "${BUILD_COMMAND}" = 'core-components' ]; then
   # build the core components
@@ -54,6 +60,7 @@ if [ "${BUILD_COMMAND}" = 'core-components' ]; then
     done
   fi
 elif [ "${BUILD_COMMAND}" = 'components' ]; then
+  kill_running_eaps
   # build components of eap
   scripts_file="${WORKSPACE}/../scripts/components"
   echo "build the components of EAP by executing components file in workspace directory"
@@ -65,15 +72,18 @@ elif [ "${BUILD_COMMAND}" = 'components' ]; then
     done
   fi
 elif [ "${BUILD_COMMAND}" = 'core' ]; then
+  kill_running_eaps
   # build core
   echo "build core in ${WORKSPACE}/wildfly-core/"
   bash -ex "${WORKSPACE}/../scripts/build-wildfly-core.sh" 2>&1
 elif [ "${BUILD_COMMAND}" = 'eap-build' ]; then
+  kill_running_eaps
   # build eap
   echo "build eap in ${WORKSPACE}/eap/"
   # mvn clean install ${MAVEN_VERBOSE}  "${FAIL_AT_THE_END}" ${MAVEN_SETTINGS_XML_OPTION} -B ${BUILD_OPTS}
   bash -ex "${WORKSPACE}/../scripts/build-eap.sh" 2>&1
 elif [ "${BUILD_COMMAND}" = 'eap-test' ]; then
+  kill_running_eaps
   # test eap
   echo "Test eap in ${WORKSPACE}/eap/"
   export TESTSUITE_OPTS="${TESTSUITE_OPTS} -Dsurefire.forked.process.timeout=${SUREFIRE_FORKED_PROCESS_TIMEOUT}"
